@@ -1,14 +1,10 @@
-function elem(id) {
-  return document.getElementById(id);
-}
-
 function getDefaultFormat() {
-  var select = elem('defaultFormat');
+  var select = document.getElementById('defaultFormat');
   return select.children[select.selectedIndex].value;
 }
 
 function setDefaultFormat(value) {
-  var select = elem('defaultFormat');
+  var select = document.getElementById('defaultFormat');
   var index = 0;
   for (var i = 0; i < select.children.length; ++i) {
     if (select.children[i].value == value) {
@@ -20,29 +16,29 @@ function setDefaultFormat(value) {
 }
 
 function restoreOptions() {
-  var value = localStorage['defaultFormat'];
-  if (!value) {
-    restoreDefaults();
-  }
-  for (var i = 1; i <= 9; ++i) {
-    elem('title'+i).value = localStorage['title'+i] || '';
-    elem('format'+i).value = localStorage['format'+i] || '';
-  }
-  setDefaultFormat(value);
+  gettingOptions(options => {
+    setDefaultFormat(options.defaultValue);
+    for (var i = 1; i <= 9; ++i) {
+      document.getElementById('title'+i).value = options['title'+i] || '';
+      document.getElementById('format'+i).value = options['format'+i] || '';
+    }
+  });
 }
 
 function saveOptions() {
-  localStorage['defaultFormat'] = getDefaultFormat();
+  var options = {defaultFormat: getDefaultFormat()}
   for (var i = 1; i <= 9; ++i) {
-    localStorage['title'+i] = elem('title'+i).value;
-    localStorage['format'+i] = elem('format'+i).value;
+    options['title'+i] = document.getElementById('title'+i).value;
+    options['format'+i] = document.getElementById('format'+i).value;
   }
+  chrome.storage.sync.set(options);
+  createContextMenus(options);
 }
 
 function restoreDefaults() {
   for (var i = 1; i <= 9; ++i) {
-    elem('title'+i).value = DEFAULT_OPTIONS['title'+i] || '';
-    elem('format'+i).value = DEFAULT_OPTIONS['format'+i] || '';
+    document.getElementById('title'+i).value = DEFAULT_OPTIONS['title'+i] || '';
+    document.getElementById('format'+i).value = DEFAULT_OPTIONS['format'+i] || '';
   }
   setDefaultFormat(DEFAULT_OPTIONS['defaultFormat']);
   saveOptions();
@@ -50,8 +46,8 @@ function restoreDefaults() {
 
 function init() {
   restoreOptions();
-  elem('saveButton').addEventListener('click', saveOptions);
-  elem('restoreDefaultsButton').addEventListener('click', restoreDefaults);
+  document.getElementById('saveButton').addEventListener('click', saveOptions);
+  document.getElementById('restoreDefaultsButton').addEventListener('click', restoreDefaults);
 }
 
 document.addEventListener('DOMContentLoaded', init);

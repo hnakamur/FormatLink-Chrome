@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Getting Started Extension's Popup</title>
-<style>
-body {
-  min-width:360px;
-  overflow-x:hidden;
-}
-label {
-  font: 90% 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif
-}
-span.radio {
-  margin: 0 4px 0 4px;
-}
-</style>
+<meta charset="utf-8"/>
+<title>FormatLink Extension's Popup</title>
+<link rel="stylesheet" href="popup.css"></link>
 <script src="common.js"></script>
 <script src="popup.js"></script>
 </head>
 <body>
+
+<form>
+<fieldset>
+<label>Copied Text:</label>
 <div>
-<label for="textToCopy">Copied Text:</label>
-<textarea id="textToCopy" cols="50" rows="4"></textarea>
+<textarea id="textToCopy"></textarea>
 </div>
-<label for="formatGroup">Switch format:</label>
-<div id="formatGroup"></div>
-<button id="saveDefaultFormatButton">Save as Default</button>
+</fieldset>
+
+<fieldset>
+<label>Switch Format:</label>
+<div id="formatGroup">
 </div>
+</fieldset>
+
+<fieldset>
+<button id="saveDefaultFormatButton">Set as default</button>
+</fieldset>
+</form>
 </body>
 </html>
