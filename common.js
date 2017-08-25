@@ -51,7 +51,7 @@ function createContextMenus(options) {
   chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: "format-link-format-default",
-    title: "copy URL in default format",
+    title: "as Default",
     contexts: ["all"]
   });
   var cnt = getFormatCount(options);
@@ -59,7 +59,7 @@ function createContextMenus(options) {
   for (i = 0; i < cnt; i++) {
     chrome.contextMenus.create({
       id: "format-link-format" + (i + 1),
-      title: "copy URL in " + options["title" + (i + 1)] + " format",
+      title: "as " + options["title" + (i + 1)],
       contexts: ["all"]
     });
   }
