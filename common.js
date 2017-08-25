@@ -77,6 +77,24 @@ function getSelectedText(callback) {
   });
 }
 
+function getLinkText(url, callback) {
+  chrome.tabs.executeScript({
+    code: `
+      var links = document.querySelectorAll('a');
+      for (var i = 0; i < links.length; i++) {
+        var link = links[i];
+        if (link.href === "${url}") {
+          text = link.innerText.trim();
+          break
+        }
+      }
+      text;
+    `
+  }, results => {
+    callback(results[0]);
+  });
+}
+
 function queryActiveTab(callback) {
   chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     callback(tabs[0]);
