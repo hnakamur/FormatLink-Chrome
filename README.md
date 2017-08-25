@@ -24,8 +24,13 @@ In format settings, you can use the mini template language.
 * variable reference: {{variable}}
     * variable = title / url / text
     * The value of variable `title` is the HTML page title.
-    * The value of variable `text` is the selected text if some text is selected,
-      or the page URL if no text is selected.
+    * The value of variable `text` is determined as below:
+         * If some text is selected, the selected text is used.
+         * If you open the context menu over a link, this extension search the entire document
+           for a link whose URL is the same as the link you selected, and uses the text of the link found.
+           Note: If there is another link of the same URL, this is not what you want, but this is
+           best I can do for now.
+         * Otherwise, the page URL is used.
     * The value of the variable `url` is the link URL if selection contains only a link AND
       you initiate a copy with a context menu.
       Otherwise, the value of variable `url` is the HTML page URL.
