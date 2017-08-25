@@ -1,21 +1,45 @@
 # Format Link for Chrome
 
 ## Why do I need it?
-To format the link of the active tab instantly to use in Markdown, Textile or other formats.
+To format the link of the active tab instantly to use in Markdown, reST, HTML, Text, Textile or other formats.
 
 ## How to use
-Press the toolbar icon of "Format Link".  When a popup opens, texts are automatically copied to the clipboard.
+
+### toolbar button
+Press the toolbar button of "Format Link".  When a popup opens, texts are automatically copied to the clipboard.
 
 Also you can change the format with selecting the format in the dropdown list. And if you press the "Save as Default" button, you can make it as default.
+
+### context menu
+Open the context menu "Format Link", and select one of sub menus for the format you would like to use to copy the URL.
+
+### keyboard shortcut
+Press the shortcut key Alt+C to copy the URL in the default format.
+If you selected some text, the selected text is used instead of the page title.
 
 ## Flexible settings
 You can modify formats in [Tools] -> [Extensions] -> Clik "Options" link in "Format Link" Extension.
 In format settings, you can use the mini template language.
 
-* {{variable}}
-    * variable = title / url
-    * No spaces are allowed.
-* {{variable.s("foo","bar")}}
+* variable reference: {{variable}}
+    * variable = title / url / text
+    * The value of variable `title` is the HTML page title.
+    * The value of variable `text` is determined as below:
+         * If some text is selected, the selected text is used.
+         * If you open the context menu over a link, this extension search the entire document
+           for a link whose URL is the same as the link you selected, and uses the text of the link found.
+           Note: If there is another link of the same URL, this is not what you want, but this is
+           best I can do for now.
+         * Otherwise, the page URL is used.
+    * The value of the variable `url` is the link URL if selection contains only a link AND
+      you initiate a copy with a context menu.
+      Otherwise, the value of variable `url` is the HTML page URL.
+         * Note it is always the HTML page URL if you use the toolbar button or the
+           keyboard shortcut to copy.
+           This behavior will be changed if I find a way to get a link URL in selection
+           when a toolbar button or a shortcut key is pressed.
+    * No spaces are allowed between variable name and braces.
+* string substitution: {{variable.s("foo","bar")}}
     * Which means variable.replace(new RegExp("foo", 'g'), "bar")
     * You can use escape character \ in strings.
     * You must escape the first argument for string and regexp.
@@ -27,13 +51,34 @@ In format settings, you can use the mini template language.
 Here are examples:
 
 * Markdown
-    * ```[{{title.s("\\[","\\[").s("\\]","\\]")}}]({{url.s("\\)","%29")}})```
-* Redmine Textile
-    * ```"{{title.s("\"","&quot;").s("\\[","&#91;")}}":{{url}}```
+
+```
+[{{text.s("\\[","\\[").s("\\]","\\]")}}]({{url.s("\\)","%29")}})
+```
+
+* reST
+
+```
+{{text}} <{{url}}>`_
+```
+
 * HTML
-    * ```<a href="{{url.s("\"","&quot;")}}">{{title.s("<","&lt;")}}</a>```
+
+```
+<a href="{{url.s("\"","&quot;")}}">{{text.s("<","&lt;")}}</a>
+```
+
 * Text
-    * ```{{title}}\n{{url}}```
+
+```
+{{text}}\n{{url}}
+```
+
+* Redmine Texitile
+
+```
+"{{title.s("\"","&quot;").s("\\[","&#91;")}}":{{url}}
+```
 
 ## License
 MIT License.
