@@ -5,21 +5,29 @@ To format the link of the active tab instantly to use in Markdown, reST, HTML, T
 
 ## How to use
 
-### toolbar button
-Press the toolbar button of "Format Link".  When a popup opens, texts are automatically copied to the clipboard.
+The UI changed dramatically in the version 2.0.0.
 
-Also you can change the format with selecting the format in the dropdown list. And if you press the "Save as Default" button, you can make it as default.
+Now you can use only the context menu to copy the URL.
 
-### context menu
-Open the context menu "Format Link", and select one of sub menus for the format you would like to use to copy the URL.
+1. When you open the menu over a link, the link title and the link URL are copied.
+    * However, due to the WebExtensions API limitation, the text is taken from the first link of the same URL in the page,
+       so it may be different from what you want.
+2. When you select the text and open the menu over a link, the selected text and the link URL are copied.
+    * Note you can select the text and move the mouse cursor to a link which is outside of the selection.
+3. When you open the menu somewhere not over a link, you can copy the page URL.
+    * The text becomes the selected text if you selected some text, it becomes the page title otherwise.
 
-### keyboard shortcut
-Press the shortcut key Alt+C to copy the URL in the default format.
-If you selected some text, the selected text is used instead of the page title.
+The previous version has multiple context menu items for each format to copy.
+The version 2.0.0 has only one context menu item.
+This change was made to copy a link in shorter steps.
 
-## Flexible settings
-You can modify formats in [Tools] -> [Extensions] -> Clik "Options" link in "Format Link" Extension.
-In format settings, you can use the mini template language.
+You can select the format with the radio button on the popup of the toolbar button.
+When you select the radio button, it becomes the default format.
+The "Set as default" button in the previous version was deleted.
+
+Sorry for inconvenience with this major UI changes,
+but I believe this version 2.0.0 is simpler and easier to use.
+I hope you are accustomed to the new UI soon!
 
 * variable reference: {{variable}}
     * variable = title / url / text
@@ -31,13 +39,8 @@ In format settings, you can use the mini template language.
            Note: If there is another link of the same URL, this is not what you want, but this is
            best I can do for now.
          * Otherwise, the page URL is used.
-    * The value of the variable `url` is the link URL if selection contains only a link AND
-      you initiate a copy with a context menu.
+    * The value of the variable `url` is the link URL if selection contains only a link.
       Otherwise, the value of variable `url` is the HTML page URL.
-         * Note it is always the HTML page URL if you use the toolbar button or the
-           keyboard shortcut to copy.
-           This behavior will be changed if I find a way to get a link URL in selection
-           when a toolbar button or a shortcut key is pressed.
     * No spaces are allowed between variable name and braces.
 * string substitution: {{variable.s("foo","bar")}}
     * Which means variable.replace(new RegExp("foo", 'g'), "bar")
