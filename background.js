@@ -46,20 +46,3 @@ gettingOptions(options => {
     }
   });
 });
-
-chrome.commands.onCommand.addListener(command => {
-  if (command === 'format-link-in-default-format') {
-    getSelectedText(selection => {
-      queryActiveTab(tab => {
-        gettingOptions(options => {
-          var defaultFormatID = options['defaultFormat'];
-          var format = options['format' + defaultFormatID];
-          var url = tab.url;
-          var title = tab.title;
-          var formattedText = formatURL(format, url, title, selection);
-          copyToClipboard(formattedText);
-        });
-      });
-    });
-  }
-});
