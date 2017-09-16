@@ -24,6 +24,7 @@ function populateFormatGroup(options, url, title, selectedText) {
       gettingOptions(options => {
         var formatId = e.target.value;
         populateText(options, formatId, url, title, selectedText);
+        saveDefaultFormat(formatId);
       });
     });
 
@@ -63,10 +64,6 @@ function getSelectedFormat() {
 }
 
 function init() {
-  document.getElementById('saveDefaultFormatButton').addEventListener('click', () => {
-    saveDefaultFormat(getSelectedFormat());
-  });
-
   getSelectedText(selection => {
     queryActiveTab(tab => {
       gettingOptions(options => {
