@@ -1,18 +1,10 @@
 form {
   display: grid;
   grid-template-columns: 150px 1fr;
-  margin: 16px;
-}
-form > * {
-  margin: 8px;
+  grid-gap: 8px 8px;
 }
 input {
-  width: 132px;
-  height: 2.5ex;
-}
-textarea {
   width: 100%;
-  height: 2.5ex;
 }
 #title1 {
   grid-row: 1;
