@@ -1,10 +1,34 @@
-function populateFields(options, url, title, selectedText) {
-  populateFormatGroup(options, url, title, selectedText);
-  var formatId = options['defaultFormat'];
-  populateText(options, formatId, url, title, selectedText);
+function saveDefaultFormat(format) {
+  chrome.storage.sync.set({defaultFormat: format});
 }
 
-function populateFormatGroup(options, url, title, selectedText) {
+function getFormatCount(options) {
+  var i;
+  for (i = 1; i <= 9; ++i) {
+    var optTitle = options['title' + i];
+    var optFormat = options['format' + i];
+    if (optTitle === '' || optFormat === '') {
+      break;
+    }
+  }
+  return i - 1;
+}
+
+function updateContextMenu(formatTitle, callback) {
+  var title = formatMenuItemTitle(formatTitle);
+  chrome.contextMenus.update("format-link-format-default", {
+    title: title
+  }, callback);
+}
+
+function updateAndSelectText(formattedText) {
+  var textElem = document.getElementById('textToCopy');
+  textElem.value = formattedText;
+  textElem.focus();
+  textElem.select();
+}
+
+function createRadioButtons(options, lastCopied) {
   var defaultFormat = options['defaultFormat'];
   var radios = [];
   var cnt = getFormatCount(options);
@@ -21,9 +45,14 @@ function populateFormatGroup(options, url, title, selectedText) {
       btn.setAttribute('checked', 'checked');
     }
     btn.addEventListener('click', e => {
-      gettingOptions(options => {
-        var formatId = e.target.value;
-        populateText(options, formatId, url, title, selectedText);
+      var formatId = e.target.value;
+      var formatTitle = options['title' + formatId];
+      var format = options['format' + formatId];
+      var formattedText = formatURL(format, lastCopied.url, lastCopied.title, lastCopied.text);
+      updateAndSelectText(formattedText);
+      document.execCommand('copy');
+      updateContextMenu(formatTitle, () => {
+        saveDefaultFormat(formatId);
       });
     });
 
@@ -42,38 +71,15 @@ function populateFormatGroup(options, url, title, selectedText) {
   }
 }
 
-function populateText(options, formatId, url, title, selectedText) {
-  var format = options['format' + formatId];
-  var text = formatURL(format, url, title, selectedText);
-  var textElem = document.getElementById('textToCopy');
-  textElem.value = text;
-  textElem.focus();
-  textElem.select();
-  document.execCommand('copy');
-}
-
-function getSelectedFormat() {
-  for (var i = 1; i <= FORMAT_MAX_COUNT; ++i) {
-    var radio = document.getElementById('format' + i);
-    if (radio && radio.checked) {
-      return i;
-    }
-  }
-  return undefined;
-}
-
 function init() {
-  document.getElementById('saveDefaultFormatButton').addEventListener('click', () => {
-    saveDefaultFormat(getSelectedFormat());
-  });
-
-  getSelectedText(selection => {
-    queryActiveTab(tab => {
-      gettingOptions(options => {
-        populateFields(options, tab.url, tab.title, selection);
-      });
+  chrome.storage.local.get('lastCopied', res => {
+    var lastCopied = res.lastCopied;
+    if (lastCopied && lastCopied.formattedText) {
+      updateAndSelectText(lastCopied.formattedText);
+    }
+    gettingOptions(options => {
+      createRadioButtons(options, lastCopied);
     });
   });
 }
-
 document.addEventListener('DOMContentLoaded', init);

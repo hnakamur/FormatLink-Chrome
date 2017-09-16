@@ -1,6 +1,6 @@
 {
   "name": "Format Link",
-  "version": "1.3.1",
+  "version": "2.0.0",
   "manifest_version": 2,
   "description": "Format a link and copy it to the clipboard.",
   "icons": {
@@ -18,14 +18,6 @@
     "default_icon": "icon.png",
     "default_title": "Format Link",
     "default_popup": "popup.html"
-  },
-  "commands": {
-    "format-link-in-default-format": {
-      "suggested_key": {
-        "default": "Alt+C"
-      },
-      "description": "Copy the link to the clipboard in default format"
-    }
   },
   "options_page": "options.html",
   "permissions": [
