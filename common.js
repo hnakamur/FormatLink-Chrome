@@ -51,18 +51,9 @@ function createContextMenus(options) {
   chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: "format-link-format-default",
-    title: "as Default",
-    contexts: ["all"]
+    title: "Format Link",
+    contexts: ["link", "selection", "page"]
   });
-  var cnt = getFormatCount(options);
-  var i;
-  for (i = 0; i < cnt; i++) {
-    chrome.contextMenus.create({
-      id: "format-link-format" + (i + 1),
-      title: "as " + options["title" + (i + 1)],
-      contexts: ["all"]
-    });
-  }
 }
 
 function getSelectedText(callback) {
