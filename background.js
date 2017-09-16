@@ -14,11 +14,56 @@ function copyToClipboard(text) {
   document.execCommand("copy");
 }
 
-function createContextMenus(options) {
+function createContextMenu(options) {
+  var title = formatMenuItemTitle(options['title' + options['defaultFormat']]);
   chrome.contextMenus.create({
     id: "format-link-format-default",
-    title: "Format Link",
+    title: title,
     contexts: ["link", "selection", "page"]
+  }, () => {
+    chrome.contextMenus.onClicked.addListener((info, tab) => {
+      if (info.menuItemId === "format-link-format-default") {
+        getSelectedText(selection => {
+          gettingOptions(options => {
+            var formatID = options["defaultFormat"];
+            var format = options['format' + formatID];
+            var url = info.linkUrl ? info.linkUrl : info.pageUrl;
+            var title = tab.title;
+            if (info.linkUrl && !selection) {
+              getLinkText(info.linkUrl, text => {
+                var formattedText = formatURL(format, url, title, text);
+                chrome.storage.local.set({
+                  lastCopied: {
+                    url: url,
+                    title: title,
+                    text: text,
+                    formattedText: formattedText
+                  }
+                }, () => {
+                  copyToClipboard(formattedText);
+                });
+              });
+              return;
+            }
+            var text = selection;
+            if (!text) {
+              text = info.selectionText ? info.selectionText : tab.title;
+            }
+            var formattedText = formatURL(format, url, title, text);
+            chrome.storage.local.set({
+              lastCopied: {
+                url: url,
+                title: title,
+                text: text,
+                formattedText: formattedText
+              }
+            }, () => {
+              copyToClipboard(formattedText);
+            });
+          });
+        });
+      }
+    });
   });
 }
 
@@ -53,49 +98,5 @@ function getSelectedText(callback) {
 }
 
 gettingOptions(options => {
-  createContextMenus(options);
-
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "format-link-format-default") {
-      getSelectedText(selection => {
-        gettingOptions(options => {
-          var formatID = options["defaultFormat"];
-          var format = options['format' + formatID];
-          var url = info.linkUrl ? info.linkUrl : info.pageUrl;
-          var title = tab.title;
-          if (info.linkUrl && !selection) {
-            getLinkText(info.linkUrl, text => {
-              var formattedText = formatURL(format, url, title, text);
-              chrome.storage.local.set({
-                lastCopied: {
-                  url: url,
-                  title: title,
-                  text: text,
-                  formattedText: formattedText
-                }
-              }, () => {
-                copyToClipboard(formattedText);
-              });
-            });
-            return;
-          }
-          var text = selection;
-          if (!text) {
-            text = info.selectionText ? info.selectionText : tab.title;
-          }
-          var formattedText = formatURL(format, url, title, text);
-					chrome.storage.local.set({
-						lastCopied: {
-							url: url,
-							title: title,
-							text: text,
-              formattedText: formattedText
-						}
-					}, () => {
-            copyToClipboard(formattedText);
-          });
-        });
-      });
-    }
-  });
+  createContextMenu(options);
 });

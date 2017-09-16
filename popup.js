@@ -14,6 +14,13 @@ function getFormatCount(options) {
   return i - 1;
 }
 
+function updateContextMenu(formatTitle, callback) {
+  var title = formatMenuItemTitle(formatTitle);
+  chrome.contextMenus.update("format-link-format-default", {
+    title: title
+  }, callback);
+}
+
 function updateAndSelectText(formattedText) {
   var textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
@@ -39,11 +46,14 @@ function createRadioButtons(options, lastCopied) {
     }
     btn.addEventListener('click', e => {
       var formatId = e.target.value;
+      var formatTitle = options['title' + formatId];
       var format = options['format' + formatId];
       var formattedText = formatURL(format, lastCopied.url, lastCopied.title, lastCopied.text);
       updateAndSelectText(formattedText);
       document.execCommand('copy');
-      saveDefaultFormat(formatId);
+      updateContextMenu(formatTitle, () => {
+        saveDefaultFormat(formatId);
+      });
     });
 
     var label = document.createElement('label');

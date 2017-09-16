@@ -31,6 +31,10 @@ function gettingOptions(callback) {
   return chrome.storage.sync.get(DEFAULT_OPTIONS, callback);
 }
 
+function formatMenuItemTitle(formatTitle) {
+  return "Format Link as " + formatTitle;
+}
+
 function formatURL(format, url, title, selectedText) {
   var text = '';
   var work;
