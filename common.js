@@ -22,10 +22,6 @@ var DEFAULT_OPTIONS = {
   "format9": ""
 };
 
-function saveDefaultFormat(format) {
-  chrome.storage.sync.set({defaultFormat: format});
-}
-
 function gettingOptions(callback) {
   var keys = ['defaultFormat'];
   for (var i = 1; i <= 9; ++i) {
@@ -33,63 +29,6 @@ function gettingOptions(callback) {
     keys.push('format'+i);
   }
   return chrome.storage.sync.get(DEFAULT_OPTIONS, callback);
-}
-
-function getFormatCount(options) {
-  var i;
-  for (i = 1; i <= 9; ++i) {
-    var optTitle = options['title' + i];
-    var optFormat = options['format' + i];
-    if (optTitle === '' || optFormat === '') {
-      break;
-    }
-  }
-  return i - 1;
-}
-
-function createContextMenus(options) {
-  chrome.contextMenus.removeAll();
-  chrome.contextMenus.create({
-    id: "format-link-format-default",
-    title: "Format Link",
-    contexts: ["link", "selection", "page"]
-  });
-}
-
-function getSelectedText(callback) {
-  chrome.tabs.executeScript({
-    code: "window.getSelection().toString();"
-  }, selection => {
-    var text;
-    if (selection && selection[0]) {
-      text = selection[0].trim().replace(/\s+/g, ' ');
-    }
-    callback(text);
-  });
-}
-
-function getLinkText(url, callback) {
-  chrome.tabs.executeScript({
-    code: `
-      var links = document.querySelectorAll('a');
-      for (var i = 0; i < links.length; i++) {
-        var link = links[i];
-        if (link.href === "${url}") {
-          text = link.innerText.trim();
-          break
-        }
-      }
-      text;
-    `
-  }, results => {
-    callback(results[0]);
-  });
-}
-
-function queryActiveTab(callback) {
-  chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-    callback(tabs[0]);
-  });
 }
 
 function formatURL(format, url, title, selectedText) {

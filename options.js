@@ -14,7 +14,6 @@ function saveOptions() {
     options['format'+i] = document.getElementById('format'+i).value;
   }
   chrome.storage.sync.set(options);
-  createContextMenus(options);
 }
 
 function restoreDefaults() {
