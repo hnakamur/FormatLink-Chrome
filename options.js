@@ -1,5 +1,5 @@
 function restoreOptions() {
-  gettingOptions(options => {
+  gettingOptions().then(options => {
     for (var i = 1; i <= 9; ++i) {
       document.getElementById('title'+i).value = options['title'+i] || '';
       document.getElementById('format'+i).value = options['format'+i] || '';

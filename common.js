@@ -22,13 +22,22 @@ var DEFAULT_OPTIONS = {
   "format9": ""
 };
 
-function gettingOptions(callback) {
+function gettingOptions() {
   var keys = ['defaultFormat'];
   for (var i = 1; i <= 9; ++i) {
     keys.push('title'+i);
     keys.push('format'+i);
   }
-  return chrome.storage.sync.get(DEFAULT_OPTIONS, callback);
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(DEFAULT_OPTIONS, items => {
+      var err = chrome.runtime.lastError;
+      if (err) {
+        reject(err);
+      } else {
+        resolve(items)
+      }
+    });
+  });
 }
 
 function formatMenuItemTitle(formatTitle) {

@@ -77,7 +77,7 @@ function init() {
     if (lastCopied && lastCopied.formattedText) {
       updateAndSelectText(lastCopied.formattedText);
     }
-    gettingOptions(options => {
+    gettingOptions().then(options => {
       createRadioButtons(options, lastCopied);
     });
   });

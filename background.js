@@ -24,7 +24,7 @@ function createContextMenu(options) {
     chrome.contextMenus.onClicked.addListener((info, tab) => {
       if (info.menuItemId === "format-link-format-default") {
         getSelectedText(selection => {
-          gettingOptions(options => {
+          gettingOptions().then(options => {
             var formatID = options["defaultFormat"];
             var format = options['format' + formatID];
             var url = info.linkUrl ? info.linkUrl : info.pageUrl;
@@ -97,6 +97,6 @@ function getSelectedText(callback) {
   });
 }
 
-gettingOptions(options => {
+gettingOptions().then(options => {
   createContextMenu(options);
 });
