@@ -60,7 +60,7 @@ async function createContextMenus(options) {
       var format = options['title' + (i + 1)];
       // NOTE: Some of menu items weren't created when I added 'await' here.
       // So I deleted 'await' as a workaround.
-      chrome.contextMenus.create({
+      await browser.menus.create({
         id: "format-link-format" + (i + 1),
         title: "as " + format,
         contexts: ["link", "selection", "page"]
