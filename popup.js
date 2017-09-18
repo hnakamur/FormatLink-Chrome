@@ -1,26 +1,3 @@
-function saveDefaultFormat(format) {
-  chrome.storage.sync.set({defaultFormat: format});
-}
-
-function getFormatCount(options) {
-  var i;
-  for (i = 1; i <= 9; ++i) {
-    var optTitle = options['title' + i];
-    var optFormat = options['format' + i];
-    if (optTitle === '' || optFormat === '') {
-      break;
-    }
-  }
-  return i - 1;
-}
-
-function updateContextMenu(formatTitle, callback) {
-  var title = formatMenuItemTitle(formatTitle);
-  chrome.contextMenus.update("format-link-format-default", {
-    title: title
-  }, callback);
-}
-
 function updateAndSelectText(formattedText) {
   var textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
@@ -44,16 +21,18 @@ function createRadioButtons(options, lastCopied) {
     if (i == defaultFormat) {
       btn.setAttribute('checked', 'checked');
     }
-    btn.addEventListener('click', e => {
-      var formatId = e.target.value;
-      var formatTitle = options['title' + formatId];
-      var format = options['format' + formatId];
+    btn.addEventListener('click', async e => {
+      var formatID = e.target.value;
+      var options = await gettingOptions();
+      var format = options['format' + formatID];
       var formattedText = formatURL(format, lastCopied.url, lastCopied.title, lastCopied.text);
       updateAndSelectText(formattedText);
       document.execCommand('copy');
-      updateContextMenu(formatTitle, () => {
-        saveDefaultFormat(formatId);
-      });
+      if (formatID !== options.defaultFormat) {
+        await saveDefaultFormat(formatID);
+        options.defaultFormat = formatID;
+      }
+      await createContextMenus(options);
     });
 
     var label = document.createElement('label');
@@ -71,15 +50,13 @@ function createRadioButtons(options, lastCopied) {
   }
 }
 
-function init() {
-  chrome.storage.local.get('lastCopied', res => {
-    var lastCopied = res.lastCopied;
-    if (lastCopied && lastCopied.formattedText) {
-      updateAndSelectText(lastCopied.formattedText);
-    }
-    gettingOptions(options => {
-      createRadioButtons(options, lastCopied);
-    });
-  });
+async function init() {
+  var res = await chrome.storage.local.get('lastCopied');
+  var lastCopied = res.lastCopied;
+  if (lastCopied && lastCopied.formattedText) {
+    updateAndSelectText(lastCopied.formattedText);
+  }
+  var options = await gettingOptions();
+  await createRadioButtons(options, lastCopied);
 }
 document.addEventListener('DOMContentLoaded', init);

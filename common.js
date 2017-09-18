@@ -19,20 +19,61 @@ var DEFAULT_OPTIONS = {
   "title8": "",
   "format8": "",
   "title9": "",
-  "format9": ""
+  "format9": "",
+  "createSubmenus": false
 };
 
-function gettingOptions(callback) {
-  var keys = ['defaultFormat'];
-  for (var i = 1; i <= 9; ++i) {
-    keys.push('title'+i);
-    keys.push('format'+i);
-  }
-  return chrome.storage.sync.get(DEFAULT_OPTIONS, callback);
+async function gettingOptions() {
+  return await new Promise((resolve, reject) => {
+    chrome.storage.sync.get(DEFAULT_OPTIONS, items => {
+      var err = chrome.runtime.lastError;
+      if (err) {
+        reject(err);
+      } else {
+        resolve(items);
+      }
+    });
+  });
 }
 
-function formatMenuItemTitle(formatTitle) {
-  return "Format Link as " + formatTitle;
+function getFormatCount(options) {
+  var i;
+  for (i = 1; i <= 9; ++i) {
+    var optTitle = options['title' + i];
+    var optFormat = options['format' + i];
+    if (optTitle === '' || optFormat === '') {
+      break;
+    }
+  }
+  return i - 1;
+}
+
+async function saveDefaultFormat(format) {
+  await chrome.storage.sync.set({defaultFormat: format});
+}
+
+async function createContextMenus(options) {
+  await chrome.contextMenus.removeAll();
+  if (options.createSubmenus) {
+    var count = getFormatCount(options);
+    for (var i = 0; i < count; i++) {
+      var format = options['title' + (i + 1)];
+      // NOTE: Some of menu items weren't created when I added 'await' here.
+      // So I deleted 'await' as a workaround.
+      chrome.contextMenus.create({
+        id: "format-link-format" + (i + 1),
+        title: "as " + format,
+        contexts: ["link", "selection", "page"]
+      });
+    }
+  } else {
+    var defaultFormat = options['title' + options['defaultFormat']];
+    await chrome.contextMenus.create({
+      id: "format-link-format-default",
+      title: "Format Link as " + defaultFormat,
+      contexts: ["link", "selection", "page"]
+    });
+  }
 }
 
 function formatURL(format, url, title, selectedText) {
