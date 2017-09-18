@@ -55,17 +55,17 @@ async function saveDefaultFormat(format) {
 async function createContextMenus(options) {
   await chrome.contextMenus.removeAll();
   if (options.createSubmenus) {
+    var promises = [];
     var count = getFormatCount(options);
     for (var i = 0; i < count; i++) {
       var format = options['title' + (i + 1)];
-      // NOTE: Some of menu items weren't created when I added 'await' here.
-      // So I deleted 'await' as a workaround.
-      chrome.contextMenus.create({
+      promises[i] = chrome.contextMenus.create({
         id: "format-link-format" + (i + 1),
         title: "as " + format,
         contexts: ["link", "selection", "page"]
       });
     }
+    await Promise.all(promises);
   } else {
     var defaultFormat = options['title' + options['defaultFormat']];
     await chrome.contextMenus.create({
