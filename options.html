@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <title>FormatLink settings</title>
 <link rel="stylesheet" href="options.css"></link>
+<script src="chrome-extension-async.js"></script>
 <script src="common.js"></script>
 <script src="options.js"></script>
 </head>
@@ -38,6 +39,11 @@
 
 <input type="text" id="title9" placeholder="Title9"></input>
 <input type="text" id="format9" placeholder="Format9"></textarea>
+
+<div id="createSubmenusRow">
+  <input type="checkbox" id="createSubmenusCheckbox"></input>
+  <label for="createSubmenusCheckbox">Create submenus</label>
+</div>
 
 <div id="btnGroup">
 <button class="btn btn-primary" id="saveButton">Save changes</button>
