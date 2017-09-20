@@ -62,7 +62,7 @@ async function createContextMenus(options) {
       promises[i] = chrome.contextMenus.create({
         id: "format-link-format" + (i + 1),
         title: "as " + format,
-        contexts: ["link", "selection", "page"]
+        contexts: ["all"]
       });
     }
     await Promise.all(promises);
@@ -71,7 +71,7 @@ async function createContextMenus(options) {
     await chrome.contextMenus.create({
       id: "format-link-format-default",
       title: "Format Link as " + defaultFormat,
-      contexts: ["link", "selection", "page"]
+      contexts: ["all"]
     });
   }
 }
