@@ -47,6 +47,8 @@ async function getSelectedText() {
 
 (async function() {
   try {
+    const platformInfo = await chrome.runtime.getPlatformInfo();
+    const isWindows = platformInfo.os === 'win';
     var options = await gettingOptions();
     await createContextMenus(options);
     chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -68,7 +70,7 @@ async function getSelectedText() {
               text = title;
             }
           }
-          var formattedText = formatURL(format, url, title, text);
+          var formattedText = formatURL(format, url, title, text, isWindows);
           await chrome.storage.local.set({
             lastCopied: {
               url: url,
