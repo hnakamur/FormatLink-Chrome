@@ -102,6 +102,7 @@ Source codes are hosted at [Github](https://github.com/hnakamur/FormatLink-Chrom
 
 * Due to security reason, you cannot copy the URL on some pages like the Chrome Extension Gallary.
 * When you copy a link with a context menu after pointing mouse to a link, this extension manually searches the first link whose URL is equals to the link you pointed in the whole document, due to limitation of [chrome.contextMenus API](https://developer.chrome.com/extensions/contextMenus). So if there are multiple links of the same URL, and if you pointed to non-first link, the text is not what you want. However this is the best we can do right now.
+* Chrome allow each extension to have at most 4 keyboard shortcuts. One shortcut is used for copying a link with the default format, and the rest of three are used for copying a link with the corresponding format 1 to format 3. So format 4 to format 9 does not have keyboard shortcut.
 
 ## Credits
 
