@@ -1,6 +1,6 @@
-var FORMAT_MAX_COUNT = 9;
+const FORMAT_MAX_COUNT = 9;
 
-var DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS = {
   "defaultFormat": 1,
   "title1": "Markdown",
   "format1": "[{{text.s(\"\\\\[\",\"\\\\[\").s(\"\\\\]\",\"\\\\]\")}}]({{url.s(\"\\\\)\",\"%29\")}})",
@@ -26,7 +26,7 @@ var DEFAULT_OPTIONS = {
 async function gettingOptions() {
   return await new Promise((resolve, reject) => {
     chrome.storage.sync.get(DEFAULT_OPTIONS, items => {
-      var err = chrome.runtime.lastError;
+      const err = chrome.runtime.lastError;
       if (err) {
         reject(err);
       } else {
@@ -37,10 +37,10 @@ async function gettingOptions() {
 }
 
 function getFormatCount(options) {
-  var i;
+  let i;
   for (i = 1; i <= 9; ++i) {
-    var optTitle = options['title' + i];
-    var optFormat = options['format' + i];
+    const optTitle = options['title' + i];
+    const optFormat = options['format' + i];
     if (optTitle === '' || optFormat === '') {
       break;
     }
@@ -48,17 +48,50 @@ function getFormatCount(options) {
   return i - 1;
 }
 
-async function saveDefaultFormat(format) {
-  await chrome.storage.sync.set({defaultFormat: format});
+async function copyLinkToClipboard(format, linkUrl, linkText) {
+  try {
+    const results = await chrome.tabs.executeScript({
+      code: "typeof FormatLink_copyLinkToClipboard === 'function';",
+    });
+    // The content script's last expression will be true if the function
+    // has been defined. If this is not the case, then we need to run
+    // clipboard-helper.js to define function copyToClipboard.
+    if (!results || results[0] !== true) {
+      await chrome.tabs.executeScript({
+        file: "clipboard-helper.js",
+      });
+    }
+    // clipboard-helper.js defines functions FormatLink_formatLinkAsText
+    // and FormatLink_copyLinkToClipboard.
+    const newline = chrome.runtime.PlatformOs === 'win' ? '\r\n' : '\n';
+
+    let code = 'FormatLink_formatLinkAsText(' + JSON.stringify(format) + ',' +
+      JSON.stringify(newline) + ',' +
+      (linkUrl ? JSON.stringify(linkUrl) + ',' : '') +
+      (linkText ? JSON.stringify(linkText) + ',' : '') +
+      ');';
+    const result = await chrome.tabs.executeScript({code});
+    const formattedText = result[0];
+
+    code = 'FormatLink_copyTextToClipboard(' + JSON.stringify(formattedText) + ');';
+    await chrome.tabs.executeScript({code});
+
+    return formattedText;
+  } catch (err) {
+    // This could happen if the extension is not allowed to run code in
+    // the page, for example if the tab is a privileged page.
+    console.error('Failed to copy text: ' + err);
+    alert('Failed to copy text: ' + err);
+  }
 }
 
 async function createContextMenus(options) {
   await chrome.contextMenus.removeAll();
   if (options.createSubmenus) {
-    var promises = [];
-    var count = getFormatCount(options);
-    for (var i = 0; i < count; i++) {
-      var format = options['title' + (i + 1)];
+    let promises = [];
+    const count = getFormatCount(options);
+    for (let i = 0; i < count; i++) {
+      const format = options['title' + (i + 1)];
       promises[i] = chrome.contextMenus.create({
         id: "format-link-format" + (i + 1),
         title: "as " + format,
@@ -67,99 +100,11 @@ async function createContextMenus(options) {
     }
     await Promise.all(promises);
   } else {
-    var defaultFormat = options['title' + options['defaultFormat']];
+    const defaultFormat = options['title' + options['defaultFormat']];
     await chrome.contextMenus.create({
       id: "format-link-format-default",
       title: "Format Link as " + defaultFormat,
       contexts: ["all"]
     });
   }
-}
-
-function formatURL(format, url, title, selectedText, isWindows) {
-  var text = '';
-  var work;
-  var i = 0, len = format.length;
-
-  function parseLiteral(str) {
-    if (format.substr(i, str.length) === str) {
-      i += str.length;
-      return str;
-    } else {
-      return null;
-    }
-  }
-
-  function parseString() {
-    var str = '';
-    if (parseLiteral('"')) {
-      while (i < len) {
-        if (parseLiteral('\\')) {
-          if (i < len) {
-            str += format.substr(i++, 1);
-          } else {
-            throw new Error('parse error expected "');
-          }
-        } else if (parseLiteral('"')) {
-          return str;
-        } else {
-          if (i < len) {
-            str += format.substr(i++, 1);
-          } else {
-            throw new Error('parse error expected "');
-          }
-        }
-      }
-    } else {
-      return null;
-    }
-  }
-
-  function processVar(value) {
-    var work = value;
-    while (i < len) {
-      if (parseLiteral('.s(')) {
-        var arg1 = parseString();
-        if (arg1 && parseLiteral(',')) {
-          var arg2 = parseString();
-          if (arg2 && parseLiteral(')')) {
-            var regex = new RegExp(arg1, 'g');
-            work = work.replace(regex, arg2);
-          } else {
-            throw new Error('parse error');
-          }
-        } else {
-          throw new Error('parse error');
-        }
-      } else if (parseLiteral('}}')) {
-        text += work;
-        return;
-      } else {
-        throw new Error('parse error');
-      }
-    }
-  }
-
-  while (i < len) {
-    if (parseLiteral('\\')) {
-      if (parseLiteral('n')) {
-        text += isWindows ? "\r\n" : "\n";
-      } else if (parseLiteral('t')) {
-        text += "\t";
-      } else {
-        text += format.substr(i++, 1);
-      }
-    } else if (parseLiteral('{{')) {
-      if (parseLiteral('title')) {
-        processVar(title);
-      } else if (parseLiteral('url')) {
-        processVar(url);
-      } else if (parseLiteral('text')) {
-        processVar(selectedText ? selectedText : title);
-      }
-    } else {
-      text += format.substr(i++, 1);
-    }
-  }
-  return text;
 }

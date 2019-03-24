@@ -4,51 +4,56 @@
 To format the link of the active tab instantly to use in Markdown, reST, HTML, Text, Textile or other formats.
 
 ## How to use
+You can use keyboard shortcuts, context menus, or the toolbar button of Format Link extension
+to copy a link in the specified format. Before doing that, you can optionally select some text 
+which may or may not contain a link.
 
-The UI changed dramatically in the version 2.0.0.
+### keyboard shortcut
+The keyboard shortcut for "Copy a link in the default format" is shortcut for clicking the
+toolbar button. The link is copied in the default format and the popup is shown under
+the toolbar button.
 
-Now you can use only the context menu to copy the URL.
+Also there are shortcuts for copying in the link in the corresponding format regardless of
+the default format.
 
-1. When you open the menu over a link, the link title and the link URL are copied.
-    * However, due to the WebExtensions API limitation, the text is taken from the first link of the same URL in the page,
-       so it may be different from what you want.
-2. When you select the text and open the menu over a link, the selected text and the link URL are copied.
-    * Note you can select the text and move the mouse cursor to a link which is outside of the selection.
-3. When you open the menu somewhere not over a link, you can copy the page URL.
-    * The text becomes the selected text if you selected some text, it becomes the page title otherwise.
+You can change shortcuts at chrome://extensions/shortcuts
 
-The previous version has multiple context menu items for each format to copy.
-The version 2.0.0 has only one context menu item.
-This change was made to copy a link in shorter steps.
+### context menu
+Open the context menu and select the "Format Link as XXX" menu item.
+"XXX" in the menu item label changes as you change the default format by clicking the "Set as default" button in the popup page for the toolbar button.
 
-You can select the format with the radio button on the popup of the toolbar button.
-When you select the radio button, it becomes the default format.
-The "Set as default" button in the previous version was deleted.
+If you check the "Create submenus" in the options page and save the options,
+submenus for each format are created under the "Format Link" context menu group.
 
-Sorry for inconvenience with this major UI changes,
-but I believe this version 2.0.0 is simpler and easier to use.
-I hope you are accustomed to the new UI soon!
+### toolbar button
+When you press the toolbar button of "Format Link", the link is copied in the default format,
+the popup page becomes open, and the formatted text is shown in the text area.
 
-* variable reference: {{variable}}
+If you want to copy the link in different format, you can press one of the radio buttons.
+
+Also if you want to change the default format, you can press the "Set as default" button.
+
+## Flexible settings
+You can modify formats in [Tools] -> [Extensions] -> Clik "Options" link in "Format Link" Extension.
+In format settings, you can use the mini template language.
+
+* {{variable}}
     * variable = title / url / text
     * The value of variable `title` is the HTML page title.
-    * The value of variable `text` is determined as below:
-         * If some text is selected, the selected text is used.
-         * If you open the context menu over a link, this extension search the entire document
-           for a link whose URL is the same as the link you selected, and uses the text of the link found.
-           Note: If there is another link of the same URL, this is not what you want, but this is
-           best I can do for now.
-         * Otherwise, the page URL is used.
-    * The value of the variable `url` is the link URL if selection contains only a link.
-      Otherwise, the value of variable `url` is the HTML page URL.
+    * The value of variable `text` is the selected text if some text is selected,
+      the link text if you open the context menu over a link (see KNOWN LIMITATION below for link text),
+      or the page URL if no text is selected and you open the context menu not over a link.
+    * The value of the variable `url` is the link if you open the context menu over a link,
+      the first link if selection contains a link, or the HTML page URL otherwise.
     * No spaces are allowed between variable name and braces.
-* string substitution: {{variable.s("foo","bar")}}
-    * Which means variable.replace(new RegExp("foo", 'g'), "bar")
+* {{variable.s("foo","bar")}}
+    * Which means `variable.replace(new RegExp("foo", 'g'), "bar")`
     * You can use escape character \ in strings.
     * You must escape the first argument for string and regexp.
-      For example, .s("\\[","\\[") means replacing [ with \\[
+      For example, `.s("\\[","\\[")` means replacing `\[` with `\\[`
     * You can chain multiple .s("foo","bar")
-* You can use the escape character \
+* You can use the escape character \ in strings. For example, you need to escape `\` with `\` like `\\`,
+  and also you need to escape `{` with `\` like `\{`. See the LaTeX example below.
 * Other characters are treated as literal strings.
 
 Here are examples:
@@ -83,9 +88,20 @@ Here are examples:
 "{{title.s("\"","&quot;").s("\\[","&#91;")}}":{{url}}
 ```
 
+* LaTeX
+
+```
+\\href\{{{url}}\}\{{{text}}\}
+```
+
 ## License
 MIT License.
 Source codes are hosted at [Github](https://github.com/hnakamur/FormatLink-Chrome)
+
+## KNOWN LIMITATIONS
+
+* Due to security reason, you cannot copy the URL on some pages like the Chrome Extension Gallary.
+* When you copy a link with a context menu after pointing mouse to a link, this extension manually searches the first link whose URL is equals to the link you pointed in the whole document, due to limitation of [chrome.contextMenus API](https://developer.chrome.com/extensions/contextMenus). So if there are multiple links of the same URL, and if you pointed to non-first link, the text is not what you want. However this is the best we can do right now.
 
 ## Credits
 
