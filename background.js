@@ -1,93 +1,66 @@
-async function copyToClipboard(text) {
-  return await new Promise((resolve, reject) => {
-    function oncopy(event) {
-      document.removeEventListener("copy", oncopy, true);
-      // Hide the event from the page to prevent tampering.
-      event.stopImmediatePropagation();
-
-      // Overwrite the clipboard content.
-      event.preventDefault();
-      event.clipboardData.setData("text/plain", text);
-      resolve();
-    }
-    document.addEventListener("copy", oncopy, true);
-
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-  });
-}
-
-async function getLinkText(url) {
-  var results = await chrome.tabs.executeScript({
-    code: `
-      var links = document.querySelectorAll('a');
-      for (var i = 0; i < links.length; i++) {
-        var link = links[i];
-        if (link.href === "${url}") {
-          text = link.innerText.trim();
-          break
-        }
-      }
-      text;
-    `
-  });
-  return results[0];
-}
-
-async function getSelectedText() {
-  var selection = await chrome.tabs.executeScript({
-    code: "window.getSelection().toString();"
-  });
-  var text;
-  if (selection && selection[0]) {
-    text = selection[0].trim().replace(/\s+/g, ' ');
-  }
-  return text;
+async function saveDefaultFormat(format) {
+  await chrome.storage.sync.set({defaultFormat: format});
 }
 
 (async function() {
+  chrome.commands.onCommand.addListener(async (command) => {
+    try {
+      const prefix = 'copy-link-in-format';
+      if (command.startsWith(prefix)) {
+        let formatID = command.substr(prefix.length);
+        const options = await gettingOptions();
+        const format = options['format' + formatID];
+        await copyLinkToClipboard(format);
+      }
+    } catch (err) {
+      console.error("FormatLink extension failed to copy URL to clipboard.", err);
+    }
+  });
+
   try {
-    const platformInfo = await chrome.runtime.getPlatformInfo();
-    const isWindows = platformInfo.os === 'win';
-    var options = await gettingOptions();
+    chrome.commands.onCommand.addListener(async (command) => {
+      if (command === "copy-link-to-clipboard") {
+        const options = await gettingOptions();
+        const formatID = options.defaultFormat;
+        const format = options['format' + formatID];
+        copyLinkToClipboard(format);
+      }
+    });
+
+    const options = await gettingOptions();
     await createContextMenus(options);
     chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       if (info.menuItemId.startsWith("format-link-format")) {
         try {
-          var options = await gettingOptions();
-          var formatID = info.menuItemId.substr("format-link-format".length);
+          const options = await gettingOptions();
+          let formatID = info.menuItemId.substr("format-link-format".length);
           if (formatID === "-default") {
             formatID = options.defaultFormat;
           }
-          var format = options['format' + formatID];
-          var url = info.linkUrl ? info.linkUrl : info.pageUrl;
-          var title = tab.title;
-          var text = await getSelectedText();
-          if (!text) {
-            if (info.linkUrl) {
-              text = await getLinkText(info.linkUrl);
-            } else {
-              text = title;
-            }
-          }
-          var formattedText = formatURL(format, url, title, text, isWindows);
-          await chrome.storage.local.set({
-            lastCopied: {
-              url: url,
-              title: title,
-              text: text,
-              formattedText: formattedText
-            }
-          });
-          await copyToClipboard(formattedText);
-          if (formatID !== options.defaultFormat) {
-            await saveDefaultFormat(formatID);
-          }
+          const format = options['format' + formatID];
+          await copyLinkToClipboard(format, info.linkUrl);
         } catch (err) {
           console.error("FormatLink extension failed to copy URL to clipboard.", err);
         }
       }
     });
+
+    async function handleMessage(request, sender, sendResponse) {
+      if (request.messageID === 'update-default-format') {
+        const formatID = request.formatID;
+        await saveDefaultFormat(formatID);
+
+        const options = await gettingOptions();
+        const defaultFormat = options['title' + request.formatID];
+        await chrome.contextMenus.update(
+          "format-link-format-default",
+          { title: "Format Link as " + defaultFormat });
+        sendResponse({response: 'default format updated'});
+      } else {
+        sendResponse({response: 'invalid messageID'});
+      }
+    }
+    chrome.runtime.onMessage.addListener(handleMessage);
   } catch (err) {
     console.error("failed to create context menu", err);
   };

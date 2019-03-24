@@ -1,19 +1,22 @@
-function updateAndSelectText(formattedText) {
-  var textElem = document.getElementById('textToCopy');
+function populateText(formattedText) {
+  const textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
   textElem.focus();
   textElem.select();
 }
 
-function createRadioButtons(options, lastCopied) {
-  var defaultFormat = options['defaultFormat'];
-  var radios = [];
-  var cnt = getFormatCount(options);
-  var group = document.getElementById('formatGroup');
-  for (var i = 1; i <= cnt; ++i) {
-    var radioId = 'format' + i;
+function populateFormatGroup(options) {
+  const defaultFormat = options['defaultFormat'];
+  let radios = [];
+  const cnt = getFormatCount(options);
+  let group = document.getElementById('formatGroup');
+  while (group.hasChildNodes()) {
+    group.removeChild(group.childNodes[0]);
+  }
+  for (let i = 1; i <= cnt; ++i) {
+    let radioId = 'format' + i;
 
-    var btn = document.createElement('input');
+    let btn = document.createElement('input');
     btn.setAttribute('type', 'radio');
     btn.setAttribute('name', 'fomrat');
     btn.setAttribute('id', radioId);
@@ -22,41 +25,48 @@ function createRadioButtons(options, lastCopied) {
       btn.setAttribute('checked', 'checked');
     }
     btn.addEventListener('click', async e => {
-      var formatID = e.target.value;
-      var options = await gettingOptions();
-      var format = options['format' + formatID];
-      var formattedText = formatURL(format, lastCopied.url, lastCopied.title, lastCopied.text);
-      updateAndSelectText(formattedText);
-      document.execCommand('copy');
-      if (formatID !== options.defaultFormat) {
-        await saveDefaultFormat(formatID);
-        options.defaultFormat = formatID;
-      }
-      await createContextMenus(options);
+      const formatID = e.target.value;
+      const format = options['format' + formatID];
+      const formattedText = await copyLinkToClipboard(format);
+      populateText(formattedText);
     });
 
-    var label = document.createElement('label');
-    label.setAttribute('for', radioId);
-    var optTitle = options['title' + i];
-    var text = document.createTextNode(optTitle);
+    let optTitle = options['title' + i];
+    let text = document.createTextNode(optTitle);
+
+    let label = document.createElement('label');
+    label.appendChild(btn);
     label.appendChild(text);
 
-    var span = document.createElement('span')
-    span.setAttribute('class', 'radio');
-    span.appendChild(btn);
-    span.appendChild(label);
-
-    group.appendChild(span);
+    group.appendChild(label);
   }
 }
 
-async function init() {
-  var res = await chrome.storage.local.get('lastCopied');
-  var lastCopied = res.lastCopied;
-  if (lastCopied && lastCopied.formattedText) {
-    updateAndSelectText(lastCopied.formattedText);
+function getSelectedFormatID() {
+  for (let i = 1; i <= FORMAT_MAX_COUNT; ++i) {
+    let radio = document.getElementById('format' + i);
+    if (radio && radio.checked) {
+      return i;
+    }
   }
-  var options = await gettingOptions();
-  await createRadioButtons(options, lastCopied);
+  return undefined;
+}
+
+async function init() {
+  document.getElementById('saveDefaultFormatButton').addEventListener('click', async () => {
+    let formatID = getSelectedFormatID();
+    if (formatID) {
+      await chrome.runtime.sendMessage({
+        messageID: 'update-default-format',
+        formatID
+      });
+    }
+  });
+
+  const options = await gettingOptions();
+  const format = options['format' + options.defaultFormat];
+  let formattedText = await copyLinkToClipboard(format);
+  populateText(formattedText);
+  populateFormatGroup(options);
 }
 document.addEventListener('DOMContentLoaded', init);
