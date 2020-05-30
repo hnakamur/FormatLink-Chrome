@@ -3,23 +3,32 @@ const FORMAT_MAX_COUNT = 9;
 const DEFAULT_OPTIONS = {
   "defaultFormat": 1,
   "title1": "Markdown",
-  "format1": "[{{text.s(\"\\\\[\",\"\\\\[\").s(\"\\\\]\",\"\\\\]\")}}]({{url.s(\"\\\\)\",\"%29\")}})",
+  "format1": "[{{text.s(\"\\\\[\",\"\\\\[\").s(\"\\\\]\",\"\\\\]\")}}]({{url.s(\"\\\\(\",\"%28\").s(\"\\\\)\",\"%29\")}})",
+  "html1": 0,
   "title2": "reST",
   "format2": "`{{text}} <{{url}}>`_",
+  "html2": 0,
   "title3": "Text",
   "format3": "{{text}}\\n{{url}}",
+  "html3": 0,
   "title4": 'HTML',
   "format4": "<a href=\"{{url.s(\"\\\"\",\"&quot;\")}}\">{{text.s(\"<\",\"&lt;\")}}</a>",
+  "html4": 1,
   "title5": "LaTeX",
   "format5": "\\\\href\\{{{url}}\\}\\{{{text}}\\}",
+  "html5": 0,
   "title6": "",
   "format6": "",
+  "html6": 0,
   "title7": "",
   "format7": "",
+  "html7": 0,
   "title8": "",
   "format8": "",
+  "html8": 0,
   "title9": "",
   "format9": "",
+  "html9": 0,
   "createSubmenus": false
 };
 
@@ -48,7 +57,7 @@ function getFormatCount(options) {
   return i - 1;
 }
 
-async function copyLinkToClipboard(format, linkUrl, linkText) {
+async function copyLinkToClipboard(format, asHTML, linkUrl, linkText) {
   try {
     const results = await chrome.tabs.executeScript({
       code: "typeof FormatLink_copyLinkToClipboard === 'function';",
@@ -73,7 +82,8 @@ async function copyLinkToClipboard(format, linkUrl, linkText) {
     const result = await chrome.tabs.executeScript({code});
     const formattedText = result[0];
 
-    code = 'FormatLink_copyTextToClipboard(' + JSON.stringify(formattedText) + ');';
+    code = 'FormatLink_copyTextToClipboard(' + JSON.stringify(formattedText) + ',' +
+      asHTML + ');';
     await chrome.tabs.executeScript({code});
 
     return formattedText;
