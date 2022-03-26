@@ -57,10 +57,7 @@ async function init() {
   document.getElementById('saveDefaultFormatButton').addEventListener('click', async () => {
     let formatID = getSelectedFormatID();
     if (formatID) {
-      await chrome.runtime.sendMessage({
-        messageID: 'update-default-format',
-        formatID
-      });
+      await saveDefaultFormat(formatID);
     }
   });
 

@@ -45,6 +45,10 @@ async function gettingOptions() {
   });
 }
 
+async function saveDefaultFormat(format) {
+  await chrome.storage.sync.set({defaultFormat: format});
+}
+
 function getFormatCount(options) {
   let i;
   for (i = 1; i <= 9; ++i) {
@@ -58,41 +62,29 @@ function getFormatCount(options) {
 }
 
 async function copyLinkToClipboard(format, asHTML, linkUrl, linkText) {
-  try {
-    const results = await chrome.tabs.executeScript({
-      code: "typeof FormatLink_copyLinkToClipboard === 'function';",
-    });
-    // The content script's last expression will be true if the function
-    // has been defined. If this is not the case, then we need to run
-    // clipboard-helper.js to define function copyToClipboard.
-    if (!results || results[0] !== true) {
-      await chrome.tabs.executeScript({
-        file: "clipboard-helper.js",
-      });
+  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  const newline = chrome.runtime.PlatformOs === 'win' ? '\r\n' : '\n';
+  const injectionResults = await chrome.scripting.executeScript(
+    {
+      target: { tabId: tab.id },
+      function: FormatLink_formatLinkAsText,
+      args: [format, newline],
     }
-    // clipboard-helper.js defines functions FormatLink_formatLinkAsText
-    // and FormatLink_copyLinkToClipboard.
-    const newline = chrome.runtime.PlatformOs === 'win' ? '\r\n' : '\n';
+  );
+  const formattedText = injectionResults[0].result;
+  await chrome.scripting.executeScript(
+    {
+      target: { tabId: tab.id },
+      function: FormatLink_copyTextToClipboard,
+      args: [formattedText, asHTML],
+    },
+  );
+  return formattedText;
+}
 
-    let code = 'FormatLink_formatLinkAsText(' + JSON.stringify(format) + ',' +
-      JSON.stringify(newline) + ',' +
-      (linkUrl ? JSON.stringify(linkUrl) + ',' : '') +
-      (linkText ? JSON.stringify(linkText) + ',' : '') +
-      ');';
-    const result = await chrome.tabs.executeScript({code});
-    const formattedText = result[0];
-
-    code = 'FormatLink_copyTextToClipboard(' + JSON.stringify(formattedText) + ',' +
-      asHTML + ');';
-    await chrome.tabs.executeScript({code});
-
-    return formattedText;
-  } catch (err) {
-    // This could happen if the extension is not allowed to run code in
-    // the page, for example if the tab is a privileged page.
-    console.error('Failed to copy text: ' + err);
-    alert('Failed to copy text: ' + err);
-  }
+function onContextMenuClicked(format) {
+  console.log('context menu is clicked, format=', format);
 }
 
 async function createContextMenus(options) {
@@ -102,10 +94,29 @@ async function createContextMenus(options) {
     const count = getFormatCount(options);
     for (let i = 0; i < count; i++) {
       const format = options['title' + (i + 1)];
+      const asHTML = options['html' + (i + 1)];
       promises[i] = chrome.contextMenus.create({
         id: "format-link-format" + (i + 1),
         title: "as " + format,
-        contexts: ["all"]
+        contexts: ['all'],
+        // onclick: (info, tab) => {
+        //   chrome.scripting.executeScript(
+        //     {
+        //       // target: { tabId: tab.id },
+        //       function: FormatLink_copyTextToClipboard,
+        //       args: ["hello", false],
+        //     },
+        //   );          
+        //   // await copyLinkToClipboard(format, asHTML);
+        // //   chrome.action.setBadgeText({text: 'hi'});
+        // //   // chrome.scripting.executeScript(
+        // //   //   {
+        // //   //     function: onContextMenuClicked,
+        // //   //     args: [format],
+        // //   //   },
+        // //   // );
+        
+        // }
       });
     }
     await Promise.all(promises);
@@ -114,7 +125,36 @@ async function createContextMenus(options) {
     await chrome.contextMenus.create({
       id: "format-link-format-default",
       title: "Format Link as " + defaultFormat,
-      contexts: ["all"]
+      contexts: ['all']
     });
   }
 }
+
+
+
+function contextClick(info, tab) {
+  // chrome.action.openPopup();
+  chrome.action.setBadgeText({text: 'hi'});
+  // chrome.scripting.executeScript(
+  //   {
+  //     target: { tabId: tab.id },
+  //     function: FormatLink_copyTextToClipboard,
+  //     args: ['hello', false],
+  //   },
+  // );  
+  // chrome.scripting.executeScript(
+  //   {
+  //     function: onContextMenuClicked,
+  //     args: ['format1'],
+  //   },
+  // );
+
+  // await copyLinkToClipboard('HTML', true);
+  // const { menuItemId } = info
+
+  // if (menuItemId === 'foo') {
+  //   // do something
+  // }
+}
+
+chrome.contextMenus.onClicked.addListener(contextClick);
