@@ -73,7 +73,7 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
     return '';
   }
 
-  function formatURL(format, url, title, selectedText, newline) {
+  function formatURL(format, url, pageUrl, title, selectedText, newline) {
     let text = '';
     let work;
     let i = 0, len = format.length;
@@ -152,6 +152,8 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
           processVar(title);
         } else if (parseLiteral('url')) {
           processVar(url);
+        } else if (parseLiteral('pageUrl')) {
+          processVar(pageUrl);
         } else if (parseLiteral('text')) {
           processVar(selectedText ? selectedText : title);
         }
@@ -183,9 +185,10 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
   if (!text) {
     text = title;
   }
+  const pageUrl = window.location.href;
   if (!href) {
-    href = window.location.href;
+    href = pageUrl;
   }
 
-  return formatURL(format, href, title, text, newline);
+  return formatURL(format, href, pageUrl, title, text, newline);
 }
