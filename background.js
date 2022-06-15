@@ -1,21 +1,21 @@
 // console.log('my extension background.js');
-function myAction() {
-    console.log('my extension onClicked');
-}
+// function myAction() {
+//     console.log('my extension onClicked');
+// }
 
-chrome.action.onClicked.addListener((tab) => {
-    chrome.tabs.sendMessage(tab.id, 
-        {
-            message: "copyText",
-            textToCopy: "some text" 
-        }, function(response) {})
-// if(!tab.url.includes("chrome://")) {
-        // chrome.scripting.executeScript({
-        //   target: { tabId: tab.id },
-        //   function: myAction
-        // });
-    // }
-});
+// chrome.action.onClicked.addListener((tab) => {
+//     chrome.tabs.sendMessage(tab.id, 
+//         {
+//             message: "copyText",
+//             textToCopy: "some text" 
+//         }, function(response) {})
+// // if(!tab.url.includes("chrome://")) {
+//         // chrome.scripting.executeScript({
+//         //   target: { tabId: tab.id },
+//         //   function: myAction
+//         // });
+//     // }
+// });
 
 // chrome.runtime.onInstalled.addListener(async () => {
 //     console.log('my extension background.js onInstalled');
