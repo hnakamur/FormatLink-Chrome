@@ -114,3 +114,16 @@ chrome.contextMenus.onClicked.addListener(async (item, tab) => {
     await copyLink(format, asHTML);
   }
 });
+
+chrome.commands.onCommand.addListener(command => {
+  console.log(`Command: ${command}`);
+  const prefix = 'format-link-format';
+  if (command.startsWith(prefix)) {
+    getOptions().then(options => {
+      const formatID = command === 'format-link-format-default' ? options.defaultFormat : command.substr(prefix.length);
+      const format = options['format' + formatID];
+      const asHTML = options['html' + formatID];
+      copyLink(format, asHTML);
+    });
+  }
+});
