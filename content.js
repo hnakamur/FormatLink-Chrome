@@ -1,24 +1,29 @@
-chrome.runtime.onMessage.addListener( // this is the message listener
-    function(request, sender, sendResponse) {
-        console.log('content.js onMessage request=', request);
-        if (request.message === "copyText") {
-            copyToTheClipboard(request.textToCopy);
-            console.log('before sendResponse');
-            sendResponse({result: 'copied'});
-            // return true;
+const copyToTheClipboard = (textToCopy, asHTML) => {
+    return new Promise((resolve, reject) => {
+        const oncopy = event => {
+            document.removeEventListener("copy", oncopy, true);
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            try {
+                event.clipboardData.setData("text/plain", textToCopy);
+                if (asHTML) {
+                    event.clipboardData.setData("text/html", textToCopy);
+                }
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
         }
-    }
-);
+        document.addEventListener("copy", oncopy, true);
+        document.execCommand("copy");
+    });
+};
 
-async function copyToTheClipboard(textToCopy){
-    console.log('copyToTheClipboard textToCopy=', textToCopy);
-    const el = document.createElement('textarea');
-    el.value = textToCopy;
-    el.setAttribute('readonly', '');
-    el.style.position = 'absolute';
-    el.style.left = '-9999px';
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-}
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.message === "copyLink") {
+        copyToTheClipboard(request.textToCopy, request.asHTML).then(() => {
+            sendResponse({ result: request.textToCopy });
+        });
+        return true;
+    }
+});

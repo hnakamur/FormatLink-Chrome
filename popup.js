@@ -73,15 +73,24 @@ function populateText(formattedText) {
 // }
 // document.addEventListener('DOMContentLoaded', init);
 
-chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+// chrome.runtime.sendMessage({message: "getOptions"}).then(response => {
+//   console.log('got options=', response.options);
+//   const defaultFormat = options.defaultFormat;
+//   const format = options['format' + defaultFormat];
+//   const asHTML = options['html' + defaultFormat];
 
-chrome.tabs.sendMessage(tabs[0].id, 
-  {
-      message: "copyText",
-      textToCopy: "some text!!" 
-  }, function(response) {
-    console.log('popup received response=', response);
-    populateText(response.result);
-  })
+// });
 
+chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+  chrome.tabs.sendMessage(tabs[0].id,
+    {
+      message: "copyLink",
+      textToCopy: '<a href="https://google.co.jp/">google4</a>',
+      asHTML: true,
+    }).then(response => {
+      console.log('popup received response=', response);
+      if (response) {
+        populateText(response.result);
+      }
+    })
 });
