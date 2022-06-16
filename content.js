@@ -1,3 +1,5 @@
+'use strict';
+
 const formatLinkAsText = (format, platformOs, linkUrl) => {
   const getLinkText = url => {
     // Limitation: If multiple links for the same URL exist in document,

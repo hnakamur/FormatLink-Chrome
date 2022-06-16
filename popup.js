@@ -1,3 +1,5 @@
+'use strict';
+
 const populateText = formattedText => {
   const textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
@@ -7,13 +9,12 @@ const populateText = formattedText => {
 
 const copyLink = async (format, asHTML) => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const response = await chrome.tabs.sendMessage(tabs[0].id,
-    {
-      message: "copyLink",
-      format,
-      asHTML,
-      platformOs: chrome.runtime.PlatformOs,
-    });
+  const response = await chrome.tabs.sendMessage(tabs[0].id, {
+    message: "copyLink",
+    format,
+    asHTML,
+    platformOs: chrome.runtime.PlatformOs,
+  });
   if (response) {
     populateText(response.result);
   }
@@ -80,10 +81,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await copyLink(format, asHTML);
   }
 
-  document.getElementById('saveDefaultFormatButton').addEventListener('click', async () => {
+  document.getElementById('saveDefaultFormatButton').addEventListener('click', () => {
     const formatID = getSelectedFormatID();
     if (formatID) {
-      await chrome.runtime.sendMessage({
+      chrome.runtime.sendMessage({
         message: 'updateDefaultFormat',
         formatID
       });
