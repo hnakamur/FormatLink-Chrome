@@ -80,23 +80,18 @@ const createContextMenus = async options => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.message === 'getOptions') {
     getOptions().then(options => {
-      console.log('background on getOptions message, options=', options);
       sendResponse({ options });
     });
   } else if (request.message === 'updateDefaultFormat') {
-    console.log('updateDefaultFormat, formatID=', request.formatID);
     chrome.storage.sync.set({ defaultFormat: request.formatID }).then(() => {
       getOptions().then(options => {
         createContextMenus(options).then(() => {
-          console.log('updateDefaultFormat createContextMenus ok');
           sendResponse({});
         })
       })
     })
   } else if (request.message === 'createContextMenus') {
-    console.log('background onMessage createContextMenus');
     createContextMenus(request.options).then(() => {
-      console.log('background onMessage createContextMenus ok');
       sendResponse({});
     });
   }
@@ -129,8 +124,6 @@ const copyLink = async (menuItemId, linkUrl) => {
 };
 
 chrome.contextMenus.onClicked.addListener((item, tab) => {
-  console.log('contextMenu clicked, item=', item);
-  console.log(`contextMenu clicked, item=${item.menuItemId}, linkUrl=${item.linkUrl}, selectionText=${item.selectionText}, srcUrl=${item.srcUrl}`);
   const menuItemId = item.menuItemId;
   if (menuItemId.startsWith(menuItemIdPrefix)) {
     copyLink(menuItemId, item.linkUrl);
@@ -138,7 +131,6 @@ chrome.contextMenus.onClicked.addListener((item, tab) => {
 });
 
 chrome.commands.onCommand.addListener(command => {
-  console.log(`Command: ${command}`);
   if (command.startsWith(menuItemIdPrefix)) {
     copyLink(command);
   }

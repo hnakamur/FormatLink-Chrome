@@ -77,7 +77,6 @@ const getSelectedFormatID = () => {
 
 document.addEventListener('DOMContentLoaded', async () => {
   const options = await getOptions();
-  console.log('popup options=', options);
   if (options) {
     populateFormatGroup(options);
     await copyLink(options.defaultFormat);
