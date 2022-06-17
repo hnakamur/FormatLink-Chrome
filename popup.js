@@ -70,9 +70,14 @@ const getSelectedFormatID = () => {
   return undefined;
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+const getOptions = async () => {
   const response = await chrome.runtime.sendMessage({ message: "getOptions" });
-  const options = response.options;
+  console.log('popup.js getOptions response=', response);
+  return response.options;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const options = await getOptions();
   if (response.options) {
     populateFormatGroup(options);
     const defaultFormat = options.defaultFormat;

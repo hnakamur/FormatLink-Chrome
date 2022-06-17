@@ -1,6 +1,5 @@
 'use strict';
 
-
 const FORMAT_MAX_COUNT = 9;
 
 const DEFAULT_OPTIONS = {
@@ -52,12 +51,6 @@ const getOptions = async () => {
   const count = getFormatCount(options);
   return { ...options, count, maxCount: FORMAT_MAX_COUNT };
 };
-
-// const getOptions = async () => {
-//   const response = await chrome.runtime.sendMessage({ message: "getOptions" });
-//   console.log('options.js getOptions response=', response);
-//   return response.options;
-// }
 
 const restoreOptions = async () => {
   const options = await getOptions();
