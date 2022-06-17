@@ -1,5 +1,10 @@
 'use strict';
 
+const getOptions = async () => {
+  const response = await chrome.runtime.sendMessage({ message: "getOptions" });
+  return response.options;
+}
+
 const populateText = formattedText => {
   const textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
@@ -7,7 +12,11 @@ const populateText = formattedText => {
   textElem.select();
 };
 
-const copyLink = async (format, asHTML) => {
+const copyLink = async formatID => {
+  const options = await getOptions();
+  const format = options['format' + formatID];
+  const asHTML = options['html' + formatID];
+
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.tabs.sendMessage(tabs[0].id, {
     message: "copyLink",
@@ -39,11 +48,7 @@ const populateFormatGroup = options => {
       btn.setAttribute('checked', 'checked');
     }
     btn.addEventListener('click', async e => {
-      const formatID = e.target.value;
-      const format = options['format' + formatID];
-      const asHTML = options['html' + formatID];
-      console.log('onClick, format=', format, ', asHTML=', asHTML);
-      await copyLink(format, asHTML);
+      await copyLink(e.target.value);
     });
 
     const optTitle = options['title' + i];
@@ -70,25 +75,18 @@ const getSelectedFormatID = () => {
   return undefined;
 }
 
-const getOptions = async () => {
-  const response = await chrome.runtime.sendMessage({ message: "getOptions" });
-  return response.options;
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
   const options = await getOptions();
+  console.log('popup options=', options);
   if (options) {
     populateFormatGroup(options);
-    const defaultFormat = options.defaultFormat;
-    const format = options['format' + defaultFormat];
-    const asHTML = options['html' + defaultFormat];
-    await copyLink(format, asHTML);
+    await copyLink(options.defaultFormat);
   }
 
-  document.getElementById('saveDefaultFormatButton').addEventListener('click', () => {
+  document.getElementById('saveDefaultFormatButton').addEventListener('click', async () => {
     const formatID = getSelectedFormatID();
     if (formatID) {
-      chrome.runtime.sendMessage({
+      await chrome.runtime.sendMessage({
         message: 'updateDefaultFormat',
         formatID
       });

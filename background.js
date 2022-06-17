@@ -75,15 +75,30 @@ const createContextMenus = async options => {
   }
 };
 
+// NOTE: We use callback here since the return value of sendMessage called in
+// popup.js becomes undefined if we use async/await.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.message === 'getOptions') {
     getOptions().then(options => {
+      console.log('background on getOptions message, options=', options);
       sendResponse({ options });
-    })
+    });
   } else if (request.message === 'updateDefaultFormat') {
-    chrome.storage.sync.set({ defaultFormat: request.formatID }).then(() => sendResponse({}));
+    console.log('updateDefaultFormat, formatID=', request.formatID);
+    chrome.storage.sync.set({ defaultFormat: request.formatID }).then(() => {
+      getOptions().then(options => {
+        createContextMenus(options).then(() => {
+          console.log('updateDefaultFormat createContextMenus ok');
+          sendResponse({});
+        })
+      })
+    })
   } else if (request.message === 'createContextMenus') {
-    createContextMenus(request.options).then(() => sendResponse({}));
+    console.log('background onMessage createContextMenus');
+    createContextMenus(request.options).then(() => {
+      console.log('background onMessage createContextMenus ok');
+      sendResponse({});
+    });
   }
   return true;
 });
@@ -93,7 +108,16 @@ chrome.runtime.onInstalled.addListener(async () => {
   await createContextMenus(options);
 });
 
-const copyLink = async (format, asHTML, linkUrl) => {
+const menuItemIdPrefix = 'format-link-format';
+const menuItemIdDefault = 'format-link-format-default';
+
+const copyLink = async (menuItemId, linkUrl) => {
+  const options = await getOptions();
+  const formatID = menuItemId === menuItemIdDefault ?
+    options.defaultFormat : menuItemId.substr(menuItemIdPrefix.length);
+  const format = options['format' + formatID];
+  const asHTML = options['html' + formatID];
+
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.tabs.sendMessage(tabs[0].id, {
     message: "copyLink",
@@ -104,30 +128,18 @@ const copyLink = async (format, asHTML, linkUrl) => {
   });
 };
 
-chrome.contextMenus.onClicked.addListener(async (item, tab) => {
+chrome.contextMenus.onClicked.addListener((item, tab) => {
   console.log('contextMenu clicked, item=', item);
   console.log(`contextMenu clicked, item=${item.menuItemId}, linkUrl=${item.linkUrl}, selectionText=${item.selectionText}, srcUrl=${item.srcUrl}`);
-  const itemId = item.menuItemId;
-  const prefix = 'format-link-format';
-  if (itemId.startsWith(prefix)) {
-    const options = await getOptions();
-    const formatID = itemId === 'format-link-format-default' ? options.defaultFormat : itemId.substr(prefix.length);
-    const format = options['format' + formatID];
-    const asHTML = options['html' + formatID];
-    console.log('linkUrl=', item.linkUrl);
-    await copyLink(format, asHTML, item.linkUrl);
+  const menuItemId = item.menuItemId;
+  if (menuItemId.startsWith(menuItemIdPrefix)) {
+    copyLink(menuItemId, item.linkUrl);
   }
 });
 
 chrome.commands.onCommand.addListener(command => {
   console.log(`Command: ${command}`);
-  const prefix = 'format-link-format';
-  if (command.startsWith(prefix)) {
-    getOptions().then(options => {
-      const formatID = command === 'format-link-format-default' ? options.defaultFormat : command.substr(prefix.length);
-      const format = options['format' + formatID];
-      const asHTML = options['html' + formatID];
-      copyLink(format, asHTML);
-    });
+  if (command.startsWith(menuItemIdPrefix)) {
+    copyLink(command);
   }
 });
