@@ -4,18 +4,18 @@ const FORMAT_MAX_COUNT = 9;
 
 const DEFAULT_OPTIONS = {
   "defaultFormat": 1,
-  "title1": "Markdown",
-  "format1": "[{{text.s(\"\\\\[\",\"\\\\[\").s(\"\\\\]\",\"\\\\]\")}}]({{url.s(\"\\\\(\",\"%28\").s(\"\\\\)\",\"%29\")}})",
-  "html1": 0,
-  "title2": "reST",
-  "format2": "`{{text}} <{{url}}>`_",
+  "title1": 'HTML',
+  "format1": "<a href=\"{{url.s(\"\\\"\",\"&quot;\")}}\">{{text.s(\"<\",\"&lt;\")}}</a>",
+  "html1": 1,
+  "title2": "Markdown",
+  "format2": "[{{text.s(\"\\\\[\",\"\\\\[\").s(\"\\\\]\",\"\\\\]\")}}]({{url.s(\"\\\\(\",\"%28\").s(\"\\\\)\",\"%29\")}})",
   "html2": 0,
   "title3": "Text",
   "format3": "{{text}}\\n{{url}}",
   "html3": 0,
-  "title4": 'HTML',
-  "format4": "<a href=\"{{url.s(\"\\\"\",\"&quot;\")}}\">{{text.s(\"<\",\"&lt;\")}}</a>",
-  "html4": 1,
+  "title4": "reST",
+  "format4": "`{{text}} <{{url}}>`_",
+  "html4": 0,
   "title5": "LaTeX",
   "format5": "\\\\href\\{{{url}}\\}\\{{{text}}\\}",
   "html5": 0,
@@ -31,7 +31,7 @@ const DEFAULT_OPTIONS = {
   "title9": "",
   "format9": "",
   "html9": 0,
-  "createSubmenus": false
+  "createSubmenus": true
 };
 
 const getFormatCount = options => {
@@ -44,6 +44,12 @@ const getFormatCount = options => {
     }
   }
   return i - 1;
+};
+
+const getDefaultOptions = () => {
+  const options = DEFAULT_OPTIONS;
+  const count = getFormatCount(options);
+  return { ...options, count, maxCount: FORMAT_MAX_COUNT };
 };
 
 const getOptions = async () => {
@@ -82,6 +88,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     getOptions().then(options => {
       sendResponse({ options });
     });
+  } else if (request.message === 'getDefaultOptions') {
+    const options = getDefaultOptions();
+    sendResponse({ options });
   } else if (request.message === 'updateDefaultFormat') {
     chrome.storage.sync.set({ defaultFormat: request.formatID }).then(() => {
       getOptions().then(options => {
