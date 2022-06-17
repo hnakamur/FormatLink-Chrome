@@ -93,17 +93,20 @@ chrome.runtime.onInstalled.addListener(async () => {
   await createContextMenus(options);
 });
 
-const copyLink = async (format, asHTML) => {
+const copyLink = async (format, asHTML, linkUrl) => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.tabs.sendMessage(tabs[0].id, {
     message: "copyLink",
     format,
     asHTML,
     platformOs: chrome.runtime.PlatformOs,
+    linkUrl,
   });
 };
 
 chrome.contextMenus.onClicked.addListener(async (item, tab) => {
+  console.log('contextMenu clicked, item=', item);
+  console.log(`contextMenu clicked, item=${item.menuItemId}, linkUrl=${item.linkUrl}, selectionText=${item.selectionText}, srcUrl=${item.srcUrl}`);
   const itemId = item.menuItemId;
   const prefix = 'format-link-format';
   if (itemId.startsWith(prefix)) {
@@ -111,7 +114,8 @@ chrome.contextMenus.onClicked.addListener(async (item, tab) => {
     const formatID = itemId === 'format-link-format-default' ? options.defaultFormat : itemId.substr(prefix.length);
     const format = options['format' + formatID];
     const asHTML = options['html' + formatID];
-    await copyLink(format, asHTML);
+    console.log('linkUrl=', item.linkUrl);
+    await copyLink(format, asHTML, item.linkUrl);
   }
 });
 

@@ -151,6 +151,7 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
     text = getLinkText(href);
   }
   const selection = window.getSelection();
+  console.log(`linkUrl=${linkUrl}, text=${text}, selection?.rangeCount=${selection?.rangeCount}`);
   if (selection.rangeCount > 0) {
     const selectionText = selection.toString().trim();
     if (!text && selectionText) {
@@ -196,7 +197,7 @@ const copyToTheClipboard = (textToCopy, asHTML) => {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.message === "copyLink") {
-    const textToCopy = formatLinkAsText(request.format, request.platformOs);
+    const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
     await copyToTheClipboard(textToCopy, request.asHTML);
     sendResponse({ result: textToCopy });
   }
