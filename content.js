@@ -1,6 +1,6 @@
 'use strict';
 
-const formatLinkAsText = (format, platformOs, linkUrl) => {
+const formatLinkAsText = (format, platformOs, linkUrl, linkText) => {
   const getLinkText = url => {
     // Limitation: If multiple links for the same URL exist in document,
     // the text of the first link is returned.
@@ -148,7 +148,7 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
   let text;
   let href = linkUrl;
   if (linkUrl) {
-    text = getLinkText(href);
+    text = linkText ? linkText : getLinkText(href);
   }
   const selection = window.getSelection();
   console.log(`linkUrl=${linkUrl}, text=${text}, selection?.rangeCount=${selection?.rangeCount}`);
@@ -197,7 +197,7 @@ const copyToTheClipboard = (textToCopy, asHTML) => {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.message === "copyLink") {
-    const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
+    const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl, request.linkText);
     await copyToTheClipboard(textToCopy, request.asHTML);
     sendResponse({ result: textToCopy });
   }

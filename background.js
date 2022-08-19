@@ -115,7 +115,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 const menuItemIdPrefix = 'format-link-format';
 const menuItemIdDefault = 'format-link-format-default';
 
-const copyLink = async (menuItemId, linkUrl) => {
+const copyLink = async (menuItemId, linkUrl, linkText) => {
   const options = await getOptions();
   const formatID = menuItemId === menuItemIdDefault ?
     options.defaultFormat : menuItemId.substr(menuItemIdPrefix.length);
@@ -129,13 +129,15 @@ const copyLink = async (menuItemId, linkUrl) => {
     asHTML,
     platformOs: chrome.runtime.PlatformOs,
     linkUrl,
+    linkText,
   });
 };
 
 chrome.contextMenus.onClicked.addListener((item, tab) => {
   const menuItemId = item.menuItemId;
   if (menuItemId.startsWith(menuItemIdPrefix)) {
-    copyLink(menuItemId, item.linkUrl);
+    console.log('linkUrl=', item.linkUrl, ', linkText=', item.linkText);
+    copyLink(menuItemId, item.linkUrl, item.linkText);
   }
 });
 
