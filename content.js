@@ -1,21 +1,14 @@
 'use strict';
 
-const formatLinkAsText = (format, platformOs, linkUrl) => {
-  const getLinkText = url => {
-    // Limitation: If multiple links for the same URL exist in document,
-    // the text of the first link is returned.
-    // I wish there is a better way, but it's the best we can do now.
-
-    const links = document.querySelectorAll('a');
-    for (let i = 0; i < links.length; i++) {
-      const link = links[i];
-      if (link.href === url) {
-        return link.innerText.trim();
-      }
-    }
-    return '';
+var linkText;
+document.addEventListener('mouseover', function(event) {
+  const anchorElement = event.target.closest('a');
+  if (anchorElement) {
+    linkText = anchorElement.text.trim();
   }
+});
 
+const formatLinkAsText = (format, platformOs, linkUrl) => {
   const getFirstLinkInSelection = selection => {
     const getNextNode = (node, endNode) => {
       if (node.firstChild) {
@@ -148,7 +141,7 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
   let text;
   let href = linkUrl;
   if (linkUrl) {
-    text = getLinkText(href);
+    text = linkText;
   }
   const selection = window.getSelection();
   console.log(`linkUrl=${linkUrl}, text=${text}, selection?.rangeCount=${selection?.rangeCount}`);
