@@ -47,7 +47,6 @@
     "activeTab",
     "clipboardWrite",
     "contextMenus",
-    "storage",
-    "tabs"
+    "storage"
   ]
 }
