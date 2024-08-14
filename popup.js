@@ -1,14 +1,37 @@
-function populateText(formattedText) {
+'use strict';
+
+const getOptions = async () => {
+  const response = await chrome.runtime.sendMessage({ message: "getOptions" });
+  return response.options;
+}
+
+const populateText = formattedText => {
   const textElem = document.getElementById('textToCopy');
   textElem.value = formattedText;
   textElem.focus();
   textElem.select();
-}
+};
 
-function populateFormatGroup(options) {
-  const defaultFormat = options['defaultFormat'];
-  let radios = [];
-  const cnt = getFormatCount(options);
+const copyLink = async formatID => {
+  const options = await getOptions();
+  const format = options['format' + formatID];
+  const asHTML = options['html' + formatID];
+
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const response = await chrome.tabs.sendMessage(tabs[0].id, {
+    message: "copyLink",
+    format,
+    asHTML,
+    platformOs: chrome.runtime.PlatformOs,
+  });
+  if (response) {
+    populateText(response.result);
+  }
+};
+
+const populateFormatGroup = options => {
+  const defaultFormat = options.defaultFormat;
+  const cnt = options.count;
   let group = document.getElementById('formatGroup');
   while (group.hasChildNodes()) {
     group.removeChild(group.childNodes[0]);
@@ -25,15 +48,11 @@ function populateFormatGroup(options) {
       btn.setAttribute('checked', 'checked');
     }
     btn.addEventListener('click', async e => {
-      const formatID = e.target.value;
-      const format = options['format' + formatID];
-      const asHTML = options['html' + formatID];
-      const formattedText = await copyLinkToClipboard(format, asHTML);
-      populateText(formattedText);
+      await copyLink(e.target.value);
     });
 
-    let optTitle = options['title' + i];
-    let text = document.createTextNode(optTitle);
+    const optTitle = options['title' + i];
+    const text = document.createTextNode(optTitle);
 
     let label = document.createElement('label');
     label.appendChild(btn);
@@ -43,32 +62,33 @@ function populateFormatGroup(options) {
   }
 }
 
-function getSelectedFormatID() {
-  for (let i = 1; i <= FORMAT_MAX_COUNT; ++i) {
-    let radio = document.getElementById('format' + i);
-    if (radio && radio.checked) {
+const getSelectedFormatID = () => {
+  for (let i = 1; ; ++i) {
+    const radio = document.getElementById('format' + i);
+    if (!radio) {
+      break;
+    }
+    if (radio.checked) {
       return i;
     }
   }
   return undefined;
 }
 
-async function init() {
+document.addEventListener('DOMContentLoaded', async () => {
+  const options = await getOptions();
+  if (options) {
+    populateFormatGroup(options);
+    await copyLink(options.defaultFormat);
+  }
+
   document.getElementById('saveDefaultFormatButton').addEventListener('click', async () => {
-    let formatID = getSelectedFormatID();
+    const formatID = getSelectedFormatID();
     if (formatID) {
       await chrome.runtime.sendMessage({
-        messageID: 'update-default-format',
+        message: 'updateDefaultFormat',
         formatID
       });
     }
   });
-
-  const options = await gettingOptions();
-  const format = options['format' + options.defaultFormat];
-  const asHTML = options['html' + options.defaultFormat];
-  let formattedText = await copyLinkToClipboard(format, asHTML);
-  populateText(formattedText);
-  populateFormatGroup(options);
-}
-document.addEventListener('DOMContentLoaded', init);
+});

@@ -1,42 +1,16 @@
-// This function must be called in a visible page, such as a browserAction popup
-// or a content script. Calling it in a background page has no effect!
-function FormatLink_copyTextToClipboard(text, asHTML) {
-  function oncopy(event) {
-    document.removeEventListener("copy", oncopy, true);
-    // Hide the event from the page to prevent tampering.
-    event.stopImmediatePropagation();
+'use strict';
 
-    // Overwrite the clipboard content.
-    event.preventDefault();
-    event.clipboardData.setData("text/plain", text);
-    if (asHTML) {
-      event.clipboardData.setData("text/html", text);
-    }
+var linkText;
+document.addEventListener('mouseover', function(event) {
+  const anchorElement = event.target.closest('a');
+  if (anchorElement) {
+    linkText = anchorElement.text.trim();
   }
-  document.addEventListener("copy", oncopy, true);
+});
 
-  // Requires the clipboardWrite permission, or a user gesture:
-  document.execCommand("copy");
-}
-
-function FormatLink_formatLinkAsText(format, newline, linkUrl) {
-  function getLinkText(url) {
-    // Limitation: If multiple links for the same URL exist in document,
-    // the text of the first link is returned.
-    // I wish there is a better way, but it's the best we can do now.
-
-    const links = document.querySelectorAll('a');
-    for (let i = 0; i < links.length; i++) {
-      const link = links[i];
-      if (link.href === url) {
-        return link.innerText.trim();
-      }
-    }
-    return '';
-  }
-
-  function getFirstLinkInSelection(selection) {
-    function getNextNode(node, endNode) {
+const formatLinkAsText = (format, platformOs, linkUrl) => {
+  const getFirstLinkInSelection = selection => {
+    const getNextNode = (node, endNode) => {
       if (node.firstChild) {
         return node.firstChild;
       }
@@ -50,11 +24,11 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
           return node;
         }
       }
-    }
+    };
 
-    let range = selection.getRangeAt(0);
+    const range = selection.getRangeAt(0);
     let node = range.startContainer;
-    let endNode = range.endContainer;
+    const endNode = range.endContainer;
     for (; node; node = getNextNode(node, endNode)) {
       if (node.tagName === 'A') {
         return node.href;
@@ -71,23 +45,22 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
       }
     }
     return '';
-  }
+  };
 
-  function formatURL(format, url, pageUrl, title, selectedText, newline) {
+  const formatURL = (format, url, pageUrl, title, selectedText) => {
     let text = '';
-    let work;
     let i = 0, len = format.length;
 
-    function parseLiteral(str) {
+    const parseLiteral = str => {
       if (format.substr(i, str.length) === str) {
         i += str.length;
         return str;
       } else {
         return null;
       }
-    }
+    };
 
-    function parseString() {
+    const parseString = () => {
       let str = '';
       if (parseLiteral('"')) {
         while (i < len) {
@@ -110,9 +83,9 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
       } else {
         return null;
       }
-    }
+    };
 
-    function processVar(value) {
+    const processVar = value => {
       let work = value;
       while (i < len) {
         if (parseLiteral('.s(')) {
@@ -135,13 +108,13 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
           throw new Error('parse error');
         }
       }
-    }
+    };
 
+    const newline = platformOs === 'win' ? '\r\n' : '\n';
     while (i < len) {
       if (parseLiteral('\\')) {
         if (parseLiteral('n')) {
           text += newline;
-        //  isWindows ? "\r\n" : "\n";
         } else if (parseLiteral('t')) {
           text += "\t";
         } else {
@@ -164,20 +137,21 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
     return text;
   }
 
-  let title = document.title;
+  const title = document.title;
   let text;
   let href = linkUrl;
-	if (linkUrl) {
-    text = getLinkText(href);
-	}
-  let selection = window.getSelection();
+  if (linkUrl) {
+    text = linkText;
+  }
+  const selection = window.getSelection();
+  console.log(`linkUrl=${linkUrl}, text=${text}, selection?.rangeCount=${selection?.rangeCount}`);
   if (selection.rangeCount > 0) {
-    let selectionText = selection.toString().trim();
+    const selectionText = selection.toString().trim();
     if (!text && selectionText) {
       text = selectionText;
     }
 
-    let hrefInSelection = getFirstLinkInSelection(selection);
+    const hrefInSelection = getFirstLinkInSelection(selection);
     if (!href && hrefInSelection) {
       href = hrefInSelection;
     }
@@ -190,5 +164,34 @@ function FormatLink_formatLinkAsText(format, newline, linkUrl) {
     href = pageUrl;
   }
 
-  return formatURL(format, href, pageUrl, title, text, newline);
-}
+  return formatURL(format, href, pageUrl, title, text);
+};
+
+const copyToTheClipboard = (textToCopy, asHTML) => {
+  return new Promise((resolve, reject) => {
+    const oncopy = event => {
+      document.removeEventListener("copy", oncopy, true);
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      try {
+        event.clipboardData.setData("text/plain", textToCopy);
+        if (asHTML) {
+          event.clipboardData.setData("text/html", textToCopy);
+        }
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    }
+    document.addEventListener("copy", oncopy, true);
+    document.execCommand("copy");
+  });
+};
+
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.message === "copyLink") {
+    const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
+    await copyToTheClipboard(textToCopy, request.asHTML);
+    sendResponse({ result: textToCopy });
+  }
+});
