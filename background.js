@@ -47,7 +47,7 @@ const getFormatCount = options => {
 };
 
 const getDefaultOptions = () => {
-  const options = DEFAULT_OPTIONS;
+  const options = structuredClone(DEFAULT_OPTIONS);
   const count = getFormatCount(options);
   return { ...options, count, maxCount: FORMAT_MAX_COUNT };
 };
