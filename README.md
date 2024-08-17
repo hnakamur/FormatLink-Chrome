@@ -94,6 +94,26 @@ Here are examples:
 \\href\{{{url}}\}\{{{text}}\}
 ```
 
+## Permissions required by this extension
+
+* To use this extension, the following two permissions are required:
+  * "Read and change all your data on all websites"
+    * This permission is needed for this extension to run the ["content script"](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts?hl=en) into the content of pages you visit in order to get the page title, the selected text, the page URL, or the link URL.
+  * "Modify data you copy and paste"
+    * This permission is needed to copy a URL and a text to the clipboard.
+
+For technical details, see the following pages:
+
+* [Declare permissions](https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions?hl=en)
+  * ["content_scripts.matches"](https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns?hl=en)
+    * This extension uses `"<all_urls>"`.
+* [Permissions](https://developer.chrome.com/docs/extensions/reference/permissions-list?hl=en)
+  * This extension requires the following permissions:
+    * "activeTab"
+    * "clipboardWrite"
+    * "contextMenus"
+    * "storage"
+
 ## License
 MIT License.
 Source codes are hosted at [Github](https://github.com/hnakamur/FormatLink-Chrome)
