@@ -193,5 +193,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
     await copyToTheClipboard(textToCopy, request.asHTML);
     sendResponse({ result: textToCopy });
+  } else if (request.message === "copyModifiedText") {
+    const textToCopy = request.modifiedText;
+    await copyToTheClipboard(textToCopy, request.asHTML);
+    sendResponse({ result: textToCopy });
   }
 });
