@@ -23,6 +23,10 @@ const copyLink = async formatID => {
     format,
     asHTML,
     platformOs: chrome.runtime.PlatformOs,
+  })
+  .catch(error => {
+    console.error('Error copying link:', error);
+    populateText("Failed to get link");
   });
   if (response) {
     populateText(response.result);
@@ -39,6 +43,9 @@ const copyModifiedText = async (modifiedText, formatID) => {
     modifiedText,
     asHTML,
     platformOs: chrome.runtime.PlatformOs,
+  })
+  .catch(error => {
+    console.error('Error copying modified text:', error);
   });
   if (response) {
     populateText(response.result);
