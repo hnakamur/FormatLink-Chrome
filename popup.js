@@ -123,9 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = await copyModifiedText(document.getElementById('textToCopy').value, formatID);
       if (result) {
         const resultElem = document.getElementById('copyResult');
-        resultElem.textContent = "copied!";
+        resultElem.style.visibility = 'visible';
         setTimeout(() => {
-          resultElem.textContent = "";
+          resultElem.style.visibility = 'hidden';
         }, 3000);
       }
     }
