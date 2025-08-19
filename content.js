@@ -195,5 +195,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ result: textToCopy });
     });
     return true;
+  } else if (request.message === "copyModifiedText") {
+    const textToCopy = request.modifiedText;
+    copyToTheClipboard(textToCopy, request.asHTML).then(() => {
+      sendResponse({ result: textToCopy });
+    });
+    return true;
   }
 });

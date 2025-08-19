@@ -7,8 +7,6 @@
 <script src="popup.js"></script>
 </head>
 <body>
-
-<form>
 <fieldset>
 <label>Copied Text:</label>
 <div>
@@ -17,13 +15,18 @@
 </fieldset>
 
 <fieldset>
+<button id="copyButton">Copy</button>
+<span id="copyResult" style="visibility: hidden;">copied!</span>
+</fieldset>
+
+<fieldset>
 <label>Switch Format:</label>
 <div id="formatGroup">
 </div>
 </fieldset>
+<hr>
 <fieldset>
 <button id="saveDefaultFormatButton">Set as default</button>
 </fieldset>
-</form>
 </body>
 </html>

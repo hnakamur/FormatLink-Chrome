@@ -23,10 +23,35 @@ const copyLink = async formatID => {
     format,
     asHTML,
     platformOs: chrome.runtime.PlatformOs,
+  })
+  .catch(error => {
+    console.error('Error copying link:', error);
+    populateText("Failed to get link");
   });
   if (response) {
     populateText(response.result);
   }
+};
+
+const copyModifiedText = async (modifiedText, formatID) => {
+  const options = await getOptions();
+  const asHTML = options['html' + formatID];
+
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const response = await chrome.tabs.sendMessage(tabs[0].id, {
+    message: "copyModifiedText",
+    modifiedText,
+    asHTML,
+    platformOs: chrome.runtime.PlatformOs,
+  })
+  .catch(error => {
+    console.error('Error copying modified text:', error);
+  });
+  if (response) {
+    populateText(response.result);
+    return true;
+  }
+  return false;
 };
 
 const populateFormatGroup = options => {
@@ -91,4 +116,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
   });
+
+  document.getElementById('copyButton').addEventListener('click', async () => {
+    const formatID = getSelectedFormatID();
+    if (formatID) {
+      const result = await copyModifiedText(document.getElementById('textToCopy').value, formatID);
+      if (result) {
+        const resultElem = document.getElementById('copyResult');
+        resultElem.style.visibility = 'visible';
+        setTimeout(() => {
+          resultElem.style.visibility = 'hidden';
+        }, 3000);
+      }
+    }
+  });
+
+  const textarea = document.getElementById('textToCopy');
+  if (textarea) {
+    const resize = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    };
+    textarea.addEventListener('input', resize);
+    resize();
+  }
 });
