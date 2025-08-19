@@ -188,10 +188,13 @@ const copyToTheClipboard = (textToCopy, asHTML) => {
   });
 };
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.message === "copyLink") {
-    const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
-    await copyToTheClipboard(textToCopy, request.asHTML);
-    sendResponse({ result: textToCopy });
+    (async () => {
+      const textToCopy = formatLinkAsText(request.format, request.platformOs, request.linkUrl);
+      await copyToTheClipboard(textToCopy, request.asHTML);
+      sendResponse({ result: textToCopy });
+    })();
+    return true;
   }
 });
