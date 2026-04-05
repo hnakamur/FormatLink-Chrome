@@ -17,7 +17,7 @@ const DEFAULT_OPTIONS = {
   "format4": "`{{text}} <{{url}}>`_",
   "html4": 0,
   "title5": "HTMLSelectedText",
-  "format5": "<a href=\"{{page_url.s(\"\\\"\",\"&quot;\")}}#:~:text={{selected_text.urlencode()}}\">{{title.s(\"<\",\"&lt;\")}}</a>",
+  "format5": "<a href=\"{{pageUrl.s(\"\\\"\",\"&quot;\")}}#:~:text={{selectedText.urlencode()}}\">{{title.s(\"<\",\"&lt;\")}}</a>",
   "html5": 1,
   "title6": "LaTeX",
   "format6": "\\\\href\\{{{url}}\\}\\{{{text}}\\}",
