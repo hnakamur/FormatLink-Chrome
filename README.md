@@ -43,6 +43,9 @@ In format settings, you can use the mini template language.
     * The value of variable `text` is the selected text if some text is selected,
       the link text if you open the context menu over a link (see KNOWN LIMITATION below for link text),
       or the page URL if no text is selected and you open the context menu not over a link.
+    * The value of variable `selectedText` is
+        * the selected text if some text is selected,
+        * empty string if no text is selected.
     * The value of the variable `url` is the link if you open the context menu over a link,
       the first link if selection contains a link, or the HTML page URL otherwise.
     * No spaces are allowed between variable name and braces.
@@ -52,6 +55,8 @@ In format settings, you can use the mini template language.
     * You must escape the first argument for string and regexp.
       For example, `.s("\\[","\\[")` means replacing `\[` with `\\[`
     * You can chain multiple .s("foo","bar")
+* {{variable.urlencode()}}
+    * Which means `encodeURIComponent(variable)`
 * You can use the escape character \ in strings. For example, you need to escape `\` with `\` like `\\`,
   and also you need to escape `{` with `\` like `\{`. See the LaTeX example below.
 * Other characters are treated as literal strings.
@@ -74,6 +79,12 @@ Here are examples:
 
 ```
 <a href="{{url.s("\"","&quot;")}}">{{text.s("<","&lt;")}}</a>
+```
+
+* HTML with selected text
+
+```
+<a href="{{page_url.s("\"","&quot;")}}#:~:text={{selected_text.urlencode()}}">{{title.s("<","&lt;")}}</a>
 ```
 
 * Text

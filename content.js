@@ -47,8 +47,8 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
     return '';
   };
 
-  const formatURL = (format, url, pageUrl, title, selectedText) => {
-    let text = '';
+  const formatURL = (format, url, pageUrl, title, text, selectedText) => {
+    let result = '';
     let i = 0, len = format.length;
 
     const parseLiteral = str => {
@@ -101,8 +101,10 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
           } else {
             throw new Error('parse error');
           }
+        } else if (parseLiteral('.urlencode()')) {
+          work = encodeURIComponent(work);
         } else if (parseLiteral('}}')) {
-          text += work;
+          result += work;
           return;
         } else {
           throw new Error('parse error');
@@ -114,11 +116,11 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
     while (i < len) {
       if (parseLiteral('\\')) {
         if (parseLiteral('n')) {
-          text += newline;
+          result += newline;
         } else if (parseLiteral('t')) {
-          text += "\t";
+          result += "\t";
         } else {
-          text += format.substr(i++, 1);
+          result += format.substr(i++, 1);
         }
       } else if (parseLiteral('{{')) {
         if (parseLiteral('title')) {
@@ -128,17 +130,20 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
         } else if (parseLiteral('pageUrl')) {
           processVar(pageUrl);
         } else if (parseLiteral('text')) {
-          processVar(selectedText ? selectedText : title);
+          processVar(text);
+        } else if (parseLiteral('selectedText')) {
+          processVar(selectedText);
         }
       } else {
-        text += format.substr(i++, 1);
+        result += format.substr(i++, 1);
       }
     }
-    return text;
+    return result;
   }
 
   const title = document.title;
   let text;
+  let selectedText = '';
   let href = linkUrl;
   if (linkUrl) {
     text = linkText;
@@ -146,9 +151,9 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
   const selection = window.getSelection();
   console.log(`linkUrl=${linkUrl}, text=${text}, selection?.rangeCount=${selection?.rangeCount}`);
   if (selection.rangeCount > 0) {
-    const selectionText = selection.toString().trim();
-    if (!text && selectionText) {
-      text = selectionText;
+    selectedText = selection.toString().trim();
+    if (!text && selectedText) {
+      text = selectedText;
     }
 
     const hrefInSelection = getFirstLinkInSelection(selection);
@@ -164,7 +169,7 @@ const formatLinkAsText = (format, platformOs, linkUrl) => {
     href = pageUrl;
   }
 
-  return formatURL(format, href, pageUrl, title, text);
+  return formatURL(format, href, pageUrl, title, text, selectedText);
 };
 
 const copyToTheClipboard = (textToCopy, asHTML) => {
